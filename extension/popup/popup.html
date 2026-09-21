@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Vektor</title>
+  </head>
+  <body>
+    <header class="titlebar">
+      <span class="mark">
+        <!-- Three connected nodes: the same glyph as the app icon. -->
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="5" r="2.4" />
+          <circle cx="5" cy="18" r="2.4" />
+          <circle cx="19" cy="18" r="2.4" />
+          <path d="M10.5 7 6.5 15.8M13.5 7l4 8.8M7.4 18h9.2" />
+        </svg>
+      </span>
+      <div class="brand-copy">
+        <h1>Vektor</h1>
+        <span>Browser Import</span>
+      </div>
+      <span class="usage" id="usage" title="Bisher verbrauchte Token — eine Messung, kein Guthaben">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+          <path d="M13.4 10.6 17 7" />
+          <path d="M4.6 18a9 9 0 1 1 14.8 0" />
+        </svg>
+        <span id="usage-value">–</span>
+      </span>
+    </header>
+
+    <main class="body">
+      <section class="card page">
+        <img class="thumb hidden" id="thumb" alt="" referrerpolicy="no-referrer" />
+        <div class="page-meta">
+          <p class="page-title" id="page-title">Seite wird gelesen…</p>
+          <p class="page-host" id="page-host"></p>
+          <div class="chips" id="chips"></div>
+        </div>
+      </section>
+
+      <div class="fields">
+        <label class="field">
+          <span class="field-label">Projekt</span>
+          <select id="project">
+            <option value="">Offener Graph</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Datenbank</span>
+          <select id="database" disabled>
+            <option value="">—</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field hidden" id="new-database-field">
+        <span class="field-label">Name der neuen Datenbank</span>
+        <input type="text" id="new-database" placeholder="z. B. recherche" spellcheck="false" />
+      </label>
+
+      <label class="toggle">
+        <input type="checkbox" id="map-site" />
+        <span>
+          <strong>Ganze Website</strong>
+          <em>Sucht alle Seiten der Website und verarbeitet sie sofort</em>
+        </span>
+      </label>
+
+      <button class="button" id="convert" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        <span id="convert-label">Konvertieren</span>
+      </button>
+
+      <div class="status" id="status">
+        <span class="dot"></span>
+        <span id="status-text">Verbindung wird geprüft…</span>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span id="port-label"></span>
+      <button class="link" id="options">Einstellungen</button>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

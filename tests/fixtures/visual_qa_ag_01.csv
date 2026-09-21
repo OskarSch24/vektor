@@ -1,0 +1,5 @@
+id,name,status,organisation,datum,betrag,notiz,quelle,verantwortliche_person
+1,Alpha GmbH,aktiv,AG,2026-09-01,1250.50,Erster Testdatensatz,Webseite,Ada Lovelace
+2,Beta Stiftung,offen,AG,2026-09-02,890.00,Zweiter Testdatensatz,Register,Grace Hopper
+3,Gamma Verein,aktiv,AG,2026-09-03,410.25,Doppelter Datensatz,Import,Katherine Johnson
+4,Delta KG,archiviert,AG,2026-09-04,720.00,Langer Beschreibungstext fuer die Vorschau,Manuell,Barbara Liskov

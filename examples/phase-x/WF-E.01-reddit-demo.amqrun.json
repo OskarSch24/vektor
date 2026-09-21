@@ -1,0 +1,139 @@
+{
+  "format": "amq.phase-x.run",
+  "schema_version": "1.0.0",
+  "project": {
+    "id": "phase-x",
+    "name": "AMQ Phase X"
+  },
+  "workflow": {
+    "id": "WF-E.01",
+    "name": "Reddit — Beiträge und Kommentare",
+    "version": "1.0.0"
+  },
+  "run": {
+    "id": "run-wf-e01-demo-20260905",
+    "mode": "test",
+    "status": "succeeded",
+    "started_at": "2026-09-05T10:00:00.000Z",
+    "finished_at": "2026-09-05T10:00:04.200Z"
+  },
+  "roots": [
+    "collection:reddit-demo"
+  ],
+  "nodes": [
+    {
+      "id": "collection:reddit-demo",
+      "kind": "collection",
+      "label": "Reddit Testlauf",
+      "data": {
+        "source": "Reddit API",
+        "official_api": true,
+        "items": 2
+      },
+      "source": {
+        "provider": "Reddit API",
+        "url": "https://oauth.reddit.com/r/Entrepreneur/hot",
+        "captured_at": "2026-09-05T10:00:02.000Z"
+      },
+      "provenance": {
+        "workflow_id": "WF-E.01",
+        "workflow_version": "1.0.0",
+        "run_id": "run-wf-e01-demo-20260905",
+        "transformer_version": "1.0.0"
+      }
+    },
+    {
+      "id": "community:entrepreneur",
+      "kind": "community",
+      "label": "r/Entrepreneur",
+      "data": {
+        "name": "Entrepreneur",
+        "members": 4200000
+      },
+      "raw_ref": "raw/reddit-entrepreneur.json",
+      "provenance": {
+        "workflow_id": "WF-E.01",
+        "workflow_version": "1.0.0",
+        "run_id": "run-wf-e01-demo-20260905",
+        "transformer_version": "1.0.0"
+      }
+    },
+    {
+      "id": "post:demo-001",
+      "kind": "post",
+      "label": "What made your first customers trust you?",
+      "data": {
+        "author": "market_builder",
+        "score": 184,
+        "url": "https://www.reddit.com/r/Entrepreneur/comments/demo001/",
+        "metrics": {
+          "comments": 36,
+          "upvote_ratio": 0.94
+        }
+      },
+      "provenance": {
+        "workflow_id": "WF-E.01",
+        "workflow_version": "1.0.0",
+        "run_id": "run-wf-e01-demo-20260905",
+        "transformer_version": "1.0.0"
+      }
+    },
+    {
+      "id": "comment:demo-001",
+      "kind": "comment",
+      "label": "Consistency mattered more than polish",
+      "data": {
+        "author": "smallbatchfounder",
+        "score": 42,
+        "body": "Consistency mattered more than polish. We answered every question in public."
+      },
+      "provenance": {
+        "workflow_id": "WF-E.01",
+        "workflow_version": "1.0.0",
+        "run_id": "run-wf-e01-demo-20260905",
+        "transformer_version": "1.0.0"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "contains:collection-community",
+      "type": "CONTAINS",
+      "from": "collection:reddit-demo",
+      "to": "community:entrepreneur",
+      "ordinal": 1,
+      "properties": {}
+    },
+    {
+      "id": "contains:community-post",
+      "type": "CONTAINS",
+      "from": "community:entrepreneur",
+      "to": "post:demo-001",
+      "ordinal": 1,
+      "properties": {}
+    },
+    {
+      "id": "contains:post-comment",
+      "type": "CONTAINS",
+      "from": "post:demo-001",
+      "to": "comment:demo-001",
+      "ordinal": 1,
+      "properties": {}
+    },
+    {
+      "id": "reply:comment-post",
+      "type": "REPLIES_TO",
+      "from": "comment:demo-001",
+      "to": "post:demo-001",
+      "properties": {
+        "depth": 1,
+        "verified": true
+      }
+    }
+  ],
+  "artifacts": [],
+  "integrity": {
+    "algorithm": "sha256",
+    "canonical_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

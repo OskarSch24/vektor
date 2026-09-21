@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../popup/popup.css" />
+    <link rel="stylesheet" href="options.css" />
+    <title>Vektor — Browser Import</title>
+  </head>
+  <body class="options">
+    <main>
+      <header class="page-header">
+        <span class="mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="5" r="2.4" />
+            <circle cx="5" cy="18" r="2.4" />
+            <circle cx="19" cy="18" r="2.4" />
+            <path d="M10.5 7 6.5 15.8M13.5 7l4 8.8M7.4 18h9.2" />
+          </svg>
+        </span>
+        <div>
+          <h1>Vektor</h1>
+          <p>Browser Import · lokale Verbindung</p>
+        </div>
+      </header>
+
+      <section class="card">
+        <label class="field">
+          <span class="field-label">Port des Import-Servers</span>
+          <input type="number" id="port" min="1024" max="65535" />
+        </label>
+        <p class="hint">
+          Muss mit dem Port in der App übereinstimmen — dort unter Einstellungen → Erweiterung.
+          Standard ist 8787.
+        </p>
+
+        <div class="row">
+          <button class="button secondary" id="test">Verbindung testen</button>
+          <button class="button" id="save">Speichern</button>
+        </div>
+
+        <div class="status" id="status">
+          <span class="dot"></span>
+          <span id="status-text">Noch nicht geprüft.</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Was gesendet wird</h2>
+        <ul>
+          <li>Titel, URL und die Metadaten der Seite</li>
+          <li>Den lesbaren Text — ohne Navigation, Werbung und Fußzeilen</li>
+          <li>Strukturierte Daten (JSON-LD), ausgehende Links und Bildverweise</li>
+          <li>Bei Social-Media-Posts zusätzlich Autor, Datum und die Reaktionszahlen</li>
+          <li>Bei Videos die Seitenadresse, damit die App das Video selbst laden kann</li>
+        </ul>
+        <p class="hint">
+          Alles geht ausschließlich an <span class="mono">127.0.0.1</span> — also an die App auf
+          diesem Rechner. Die Erweiterung spricht mit keinem Server im Internet. Ob und an welchen
+          KI-Anbieter Inhalte danach weitergereicht werden, entscheidest du in der App.
+        </p>
+      </section>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>

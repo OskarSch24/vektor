@@ -1,0 +1,4 @@
+id,name,status,organisation,datum,betrag,notiz,quelle,verantwortliche_person
+3,Gamma Verein,aktiv,AG,2026-09-03,410.25,Doppelter Datensatz,Import,Katherine Johnson
+5,Epsilon AG,offen,AG,2026-09-05,1337.00,Weiterer Testdatensatz,Extension,Radia Perlman
+6,Zeta Holding,aktiv,AG,2026-09-06,99.95,Letzter Testdatensatz,CSV,Margaret Hamilton
