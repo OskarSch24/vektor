@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" width="1280" height="360" role="img" aria-label="Vektor — every data file on your Mac, one workspace">
+  <defs>
+    <radialGradient id="glow" cx="1060" cy="40" r="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60A5FA" stop-opacity="0.18"/>
+      <stop offset="0.55" stop-color="#60A5FA" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="frame">
+      <rect x="0" y="0" width="1280" height="360" rx="24"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="360" fill="#0B0C0E"/>
+    <rect width="1280" height="360" fill="url(#glow)"/>
+
+    <!-- Motif left: stacked database discs (sources) -->
+    <g fill="#60A5FA">
+      <rect x="840" y="92" width="120" height="44" rx="22" fill-opacity="0.30"/>
+      <rect x="840" y="146" width="120" height="44" rx="22" fill-opacity="0.20"/>
+      <rect x="840" y="200" width="120" height="44" rx="22" fill-opacity="0.12"/>
+      <rect x="864" y="110" width="40" height="8" rx="4" fill-opacity="0.55"/>
+      <rect x="864" y="164" width="28" height="8" rx="4" fill-opacity="0.40"/>
+      <rect x="864" y="218" width="34" height="8" rx="4" fill-opacity="0.30"/>
+    </g>
+
+    <!-- Connector: source opens as a tab -->
+    <g fill="#60A5FA">
+      <rect x="976" y="166" width="24" height="4" rx="2" fill-opacity="0.35"/>
+      <rect x="1006" y="166" width="8" height="4" rx="2" fill-opacity="0.25"/>
+    </g>
+
+    <!-- Motif right: data grid (the adaptive workspace) -->
+    <g fill="none" stroke="#60A5FA">
+      <rect x="1030" y="72" width="190" height="216" rx="20" stroke-opacity="0.22"/>
+    </g>
+    <g fill="#60A5FA">
+      <!-- header row -->
+      <rect x="1048" y="90" width="44" height="14" rx="4" fill-opacity="0.55"/>
+      <rect x="1100" y="90" width="52" height="14" rx="4" fill-opacity="0.40"/>
+      <rect x="1160" y="90" width="42" height="14" rx="4" fill-opacity="0.40"/>
+      <!-- rows -->
+      <rect x="1048" y="120" width="44" height="12" rx="4" fill-opacity="0.22"/>
+      <rect x="1100" y="120" width="52" height="12" rx="4" fill-opacity="0.14"/>
+      <rect x="1160" y="120" width="42" height="12" rx="4" fill-opacity="0.14"/>
+
+      <rect x="1048" y="144" width="44" height="12" rx="4" fill-opacity="0.22"/>
+      <rect x="1100" y="144" width="52" height="12" rx="4" fill-opacity="0.14"/>
+      <rect x="1160" y="144" width="42" height="12" rx="4" fill-opacity="0.14"/>
+
+      <rect x="1048" y="168" width="44" height="12" rx="4" fill-opacity="0.22"/>
+      <rect x="1100" y="168" width="52" height="12" rx="4" fill-opacity="0.34"/>
+      <rect x="1160" y="168" width="42" height="12" rx="4" fill-opacity="0.14"/>
+
+      <rect x="1048" y="192" width="44" height="12" rx="4" fill-opacity="0.22"/>
+      <rect x="1100" y="192" width="52" height="12" rx="4" fill-opacity="0.14"/>
+      <rect x="1160" y="192" width="42" height="12" rx="4" fill-opacity="0.14"/>
+
+      <!-- mini bar chart: a second view of the same data -->
+      <rect x="1048" y="244" width="14" height="24" rx="3" fill-opacity="0.20"/>
+      <rect x="1068" y="232" width="14" height="36" rx="3" fill-opacity="0.30"/>
+      <rect x="1088" y="222" width="14" height="46" rx="3" fill-opacity="0.45"/>
+      <rect x="1108" y="238" width="14" height="30" rx="3" fill-opacity="0.26"/>
+      <rect x="1128" y="228" width="14" height="40" rx="3" fill-opacity="0.36"/>
+    </g>
+  </g>
+
+  <rect x="0.5" y="0.5" width="1279" height="359" rx="24" fill="none" stroke="#FFFFFF" stroke-opacity="0.08"/>
+
+  <text x="80" y="170" font-family="-apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="96" font-weight="600" letter-spacing="-3" fill="#EEF0F1">Vektor</text>
+  <text x="82" y="222" font-family="-apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="30" fill="#9AA4AD">Every data file on your Mac, in one workspace.</text>
+
+  <rect x="82" y="268" width="18" height="4" rx="2" fill="#60A5FA"/>
+  <text x="114" y="276" font-family="'SF Mono', Menlo, monospace" font-size="16" letter-spacing="2.5" fill="#64727C">MACOS · LOCAL DATA STUDIO · MIT</text>
+</svg>

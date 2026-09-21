@@ -1,155 +1,111 @@
-# Vektor
+<p align="center"><img src="assets/banner.svg" alt="Vektor" width="100%"></p>
 
-Eine lokale macOS-App für relationale, tabellarische, Graph- und Snapshot-Daten
-in einem projektzentrierten Interface. Eine Quelle aus dem Explorer wird
-als echter Tab geöffnet; der gemeinsame Hauptbereich passt seine Werkzeuge
-automatisch an das erkannte Datenformat an.
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-13%2B-0B0C0E?style=flat-square&logo=apple&logoColor=white" alt="macOS 13+">
+  <img src="https://img.shields.io/badge/license-MIT-60A5FA?style=flat-square" alt="MIT license">
+  <img src="https://img.shields.io/badge/Swift-AppKit-F05138?style=flat-square&logo=swift&logoColor=white" alt="Swift / AppKit">
+  <img src="https://img.shields.io/badge/React-TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="React / TypeScript">
+  <img src="https://img.shields.io/badge/DuckDB-embedded-FFF000?style=flat-square&logo=duckdb&logoColor=black" alt="DuckDB">
+  <img src="https://img.shields.io/badge/bring%20your%20own-keys-64727C?style=flat-square" alt="Bring your own keys">
+</p>
 
-Der frühere Name war **Database Studio**. Die App heißt jetzt **Vektor**;
-Bundle-ID, Speicherpfade, Schlüsselbund, Bridge-Namen und API-Protokolle bleiben
-für vorhandene Einstellungen und Integrationen stabil. Der Quellordner bleibt
-`database-studio`.
+<p align="center"><sub>🇩🇪 <a href="docs/HANDBUCH.md">Deutsches Handbuch</a></sub></p>
 
-## Datenquellen
+**Open any data file on your Mac as a tab, and get the right tools for it automatically.**
 
-| Quelle | Ansichten | Schreibmodell |
+Vektor is a local macOS app for relational, tabular, graph and snapshot data. Register your project folders once; SQLite, CSV, Parquet, DuckDB, Postgres, `.graph` files or Redis snapshots all open in the same workspace, which adapts its views to the format it detects.
+
+<p align="center"><img src="assets/screenshot.jpg" alt="Vektor showing a SQLite table in the data view, with the project explorer on the left" width="100%"></p>
+
+## Highlights
+
+- **One workspace, many formats.** Every source opens as a real tab. The shared main area switches between data, SQL, schema, statistics, graph or document tools depending on what it finds.
+- **Views on demand.** On tabular data, *View* adds record, table relations, charts, pivot, timeline, calendar, kanban, map, gallery, compare, data quality and vectors (cosine similarity).
+- **Safe by default.** Tabular sources load into an in-memory working copy, server databases are imported read-only, and Redis snapshots open as protected temporary copies. AOF files are inspected, never executed.
+- **`⌘P` across projects.** Fuzzy search over file name, project and relative path in all registered folders. `Enter` opens in the current tab, `⌘Enter` in a new one.
+- **Merge files into one table.** Combine several CSV, TSV, JSON/JSONL and Excel files into a single working copy: schemas are unioned, missing values become `NULL`, duplicates can be dropped by the columns you pick.
+- **Filters and foreign keys.** Stack parameter-bound conditions with `AND`; click a foreign-key value to open the referenced table, already filtered to that key.
+- **No silent data loss.** Unsaved changes show as a dot on the tab, and `⌘W` asks before discarding. `⌘S` opens the export or saves the graph.
+- **Built for agents too.** A token-protected local API (`/api/v1/sqlite`, `/graph`, `/vault`) with per-adapter write permissions, used by a separate MCP server to give agents data tools. A small Chrome extension can push captured data into your projects.
+
+| Sources | Views | Write model |
 |---|---|---|
-| SQLite, CSV, TSV, JSONL, Excel, Parquet, Arrow | Daten, SQL, Schema, Statistik, Export | Arbeitskopie im Speicher |
-| JSON, YAML, XML, TOML, GeoJSON | Dokumentstruktur, Originaltext, Tabelle und weitere Datenansichten | unverändertes Original |
-| DuckDB, PostgreSQL, MySQL/MariaDB, MongoDB | Tabellen/Sammlungen; Server über Verbindungsdateien | lesender Import in eine Arbeitskopie |
-| `.graph` | Graph, Cypher, Ontologie, Statistik, Import | Datei mit Autosave |
-| `.amqrun` / `.amqrun.json` | Hierarchie, Graph, JSON, Statistik | unveränderliches Original |
-| Redis RDB | Schlüssel und Phase-X-Projektion | geschützte temporäre Kopie |
-| Redis AOF | Erkennung und Diagnose | wird nicht ausgeführt |
+| SQLite, CSV, TSV, JSONL, Excel, Parquet, Arrow | Data, SQL, schema, statistics, export | in-memory working copy |
+| JSON, YAML, XML, TOML, GeoJSON | Document tree, original text, table and data views | original stays untouched |
+| DuckDB, PostgreSQL, MySQL/MariaDB, MongoDB | Tables / collections; servers via connection files | read-only import into a working copy |
+| `.graph` | Graph, Cypher, ontology, statistics, import | file with autosave |
+| `.amqrun` / `.amqrun.json` | Hierarchy, graph, JSON, statistics | immutable original |
+| Redis RDB / AOF | Keys and projection / detection and diagnostics | protected temporary copy / never executed |
 
-Die neuen Formate öffnen im vorhandenen Tab. **Ansicht** bietet dort zusätzlich Datensatz, Tabellenbeziehungen, Diagramme, Pivot, Zeitstrahl, Kalender, Kanban, Karte, Galerie, Vergleich, Datenqualität und Vektoren. Details und Verbindungsdateien: [Dateien öffnen](docs/dateien-oeffnen.md).
+File types and connection files in detail: [docs/dateien-oeffnen.md](docs/dateien-oeffnen.md) (German).
 
-Projektordner werden einmal registriert. Der gemeinsame Scanner erkennt die
-unterstützten Quellen, validiert binäre Signaturen und gruppiert mehrteilige
-Redis-AOF-Speicherstände als eine Quelle.
+## Quick start
 
-## Alltagswerkzeuge
-
-- `⌘P` durchsucht alle registrierten Projekte unscharf nach Dateiname, Projekt
-  und relativem Pfad. `Enter` öffnet im aktuellen Tab, `⌘Enter` in einem neuen.
-- Der Tabellenbereich kann mehrere CSV-, TSV-, JSON-/JSONL- und Excel-Dateien
-  zu einer gemeinsamen Arbeitskopie verbinden. Das Schema wird vereinigt,
-  fehlende Werte werden als `NULL` ergänzt und Dubletten können anhand frei
-  gewählter Spalten entfernt werden.
-- Tabellenfilter kombinieren mehrere parametergebundene Bedingungen mit `UND`.
-  Fremdschlüsselwerte öffnen per Klick die referenzierte Tabelle und setzen den
-  passenden Gleichheitsfilter.
-- Änderungen in einer tabellarischen Arbeitskopie oder einem ungespeicherten
-  Graphen erscheinen als Punkt im Root-Tab. `⌘W` verlangt vor dem Verwerfen
-  eine ausdrückliche Bestätigung; das Öffnen einer anderen Quelle ersetzt
-  einen solchen Tab nicht. `⌘S` öffnet den sicheren Export beziehungsweise
-  speichert den Graphen.
-
-## Entwicklung
+**Requirements:** macOS 13 or later, Xcode Command Line Tools (`swiftc`), Node.js with npm.
 
 ```bash
+git clone https://github.com/OskarSch24/vektor.git
+cd vektor
 npm install
-npm run dev
-npm run typecheck
-python3 tests/local_redis_migration.py
+
+./build-app.sh --no-install   # builds ./build/Vektor.app
+./build-app.sh                # builds and installs to /Applications/Vektor.app
 ```
 
-Die Browser-Vorschau hat bewusst keinen Zugriff auf beliebige lokale Pfade,
-Keychain, Redis-Snapshots oder den geschützten API-Port. Diese Fähigkeiten
-gehören zum nativen Host. Live Redis ist reine Backend-Mechanik und besitzt
-keinen eigenen Arbeitsraum oder Quellenauswahldialog.
+The build compiles the frontend, generates the app icon, compiles the Swift host, and bundles the data runtime (DuckDB, Postgres, MySQL and MongoDB drivers) together with your local `node` binary.
 
-## macOS-App bauen
+For UI work without the native host:
 
 ```bash
-./build-app.sh --no-install  # nach ./build/Vektor.app
-./build-app.sh               # nach /Applications/Vektor.app
+npm run dev          # Vite dev server (browser preview, no local file/Keychain access)
+npm run typecheck
+npm run test:data    # data-view tests
 ```
 
-Das Bundle besitzt eine eigene Identität:
+The interface is currently in German.
 
-- App: `Vektor.app`
-- Binary: `DatabaseStudio`
-- Bundle-ID: `com.oskarschiermeister.databasestudio`
-- Application Support: `~/Library/Application Support/Database Studio` (bestehender Speicherpfad)
+## Bring your own keys
 
-Beim ersten Start werden bereits vorhandene Projektpfade, Graph-Einstellungen,
-Redis-Verbindungen und API-Präferenzen sicher übernommen. Gespeicherte
-Redis-Passwörter werden erst nach verifiziertem Schreiben in den neuen
-Vektor-Keychain-Dienst aus dem alten Dienst entfernt.
+This repository ships **no databases, connection data or passwords**, only the test fixtures in `tests/fixtures/`. You add your own PostgreSQL, MySQL, MongoDB or Redis connections inside Vektor; passwords are stored in the macOS Keychain, never in files. The local API token stays on your machine in a file with mode `0600`.
 
-Der lokale Backend-Speicher wird – sobald kein Redis auf dem lokalen Port läuft –
-atomar von `~/Library/Application Support/Vault Studio/Local Store` nach
-`~/Library/Application Support/Database Studio/Local Store` verschoben. Es
-entsteht keine halbe RDB/AOF-Kopie; bei Daten in beiden Ordnern bricht die
-Migration ohne Überschreiben ab und wird beim nächsten Start erneut geprüft.
+## How it works
 
-## Lokale Schnittstellen
+```mermaid
+flowchart LR
+  F["Project folders<br/>files · .graph · snapshots"] --> S["Scanner<br/>detects & validates"]
+  D["Server databases<br/>Postgres · MySQL · MongoDB"] --> R["Data runtime<br/>Node + drivers, DuckDB"]
+  S --> T["Tabs"]
+  R --> T
+  T --> V["Adaptive workspace<br/>data · SQL · schema · charts · map …"]
+  T <--> A["Local API :8793<br/>bearer token"]
+  A <--> M["MCP server"] <--> G["Agents"]
+  X["Chrome extension"] --> I["Ingest :8787"] --> F
+```
 
-Vektor hält zwei getrennte Loopback-Listener:
+The Swift/AppKit host embeds the React UI in a WebKit view and owns everything the browser must not touch: file system access, Keychain, Redis snapshots and the two loopback listeners. The MCP server lives in a separate project and talks to Vektor only through the protected API.
 
-| Port | Auth | Zweck |
-|---:|---|---|
-| `8793` | Bearer-Token | geschützte Vektor-API |
-| `8787` | keine | enger Chrome-Ingest-Vertrag |
-
-Der API-Deskriptor liegt während des Betriebs unter
-`~/Library/Application Support/Database Studio/api.json`. Das Token wird separat
-als `api-token` mit Dateimodus `0600` dauerhaft gespeichert.
-
-Kanonische Routen:
+## Project structure
 
 ```text
-/api/v1/sqlite/...
-/api/v1/graph/...
-/api/v1/vault/...
+src/
+  native/        Swift/AppKit host, Info.plist, Redis client
+  sqlite/        tabular sources, importers, views (charts, map, compare …)
+  components/    shared workspace, graph and API panels
+  vault/         Redis snapshot views
+  GraphStudio.tsx  graph editor
+tools/
+  data-runtime/  Node runtime with DuckDB, pg, mysql2, mongodb drivers
+  agent/         background-agent install script
+extension/       Chrome extension for browser ingest
+tests/           unit, regression and e2e tests + fixtures
+docs/            German handbook and file-format reference
+build-app.sh     builds Vektor.app
 ```
 
-Jeder Adapter besitzt eine eigene Schreibfreigabe. SQLite schreibt nur in seine
-Arbeitskopie und Graph-Änderungen autosaven. RDB-/AOF-Quellen öffnen als
-unveränderliche Arbeitskopien; bestätigungspflichtige Redis-Befehle bleiben auch
-über die API gesperrt. Der Redis-Adapter steht Integrationen weiterhin als
-Backend zur Verfügung, ist aber kein eigener Zielbereich in der Oberfläche.
+## License
 
-Der gemeinsame MCP befindet sich in `../studio-mcp`. Er bietet weiterhin alle
-29 kompatiblen `sqlite_*`, `graph_*`, `vault_*` und Status-Werkzeuge. Sämtliche
-Aufrufe verwenden ausschließlich den Vektor-Deskriptor.
+[MIT](LICENSE) © 2026 Oskar Schiermeister · Asking More Questions OÜ
 
-## Browser-Import
+---
 
-Die mitgelieferte Erweiterung spricht weiterhin ausschließlich den kleinen,
-tokenlosen Vertrag auf `127.0.0.1:8787`: `GET /status`, `GET /projects`,
-`GET /targets` und `POST /ingest`. Vektor kopiert sie beim ersten Start
-in den stabilen Ordner
-`~/Library/Application Support/Database Studio/Browser Extension`. Dieser
-Ordner kann in `chrome://extensions` über „Entpackte Erweiterung laden“ gewählt
-werden und bleibt auch nach App-Updates am selben Ort.
-
-Der Server unterscheidet in der Oberfläche bewusst zwischen „bereit“ (Port
-lauscht) und „verbunden“ (eine Browser-Erweiterung wurde tatsächlich gesehen).
-Für das richtige Branding und die Verbindungsanzeige muss in Chrome die
-mitgelieferte Vektor-Erweiterung geladen sein.
-
-Nach der bewussten Umschaltung kann Vektor den Hintergrunddienst
-übernehmen:
-
-```bash
-./tools/agent/background-agent.sh install
-./tools/agent/background-agent.sh status
-./tools/agent/background-agent.sh uninstall
-```
-
-Das Installationsskript verweigert den Start, solange ein anderes Programm Port
-`8787` besitzt. So laufen nie zwei ingestfähige Prozesse versehentlich auf
-demselben Port.
-
-## Öffentliche Fassung · Eigene Zugänge
-
-Dieses Repository enthält **keine Datenbanken, Verbindungsdaten oder Passwörter** — nur die Testdaten unter `tests/fixtures/`. Zugänge zu PostgreSQL, MySQL, MongoDB oder Redis trägst du in Vektor selbst ein; Passwörter landen im macOS-Schlüsselbund, nicht in Dateien.
-
-```sh
-npm install
-./build-app.sh     # baut die macOS-App
-```
-
-*English:* No databases or credentials are included. Server passwords are entered in the app and stored in the macOS keychain. MIT licensed.
+<p align="center"><sub>Built by <a href="https://github.com/OskarSch24">Oskar Schiermeister · Asking More Questions OÜ</a></sub></p>
