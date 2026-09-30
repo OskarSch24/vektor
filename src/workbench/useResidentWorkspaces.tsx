@@ -1,4 +1,4 @@
-import { lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, memo, useCallback, useEffect, useRef, useState } from 'react';
 import type { DataWorkspaceKind, WorkspaceKind } from './model';
 
 const loadGraphStudio = () => import('../GraphStudio');
@@ -16,16 +16,18 @@ const workspaceLoaders: Record<DataWorkspaceKind, () => Promise<unknown>> = {
 
 const preloadOrder: DataWorkspaceKind[] = ['graph', 'table', 'vault'];
 
+// Memoised: the resident engines stay mounted while hidden, and without this
+// every tab click or dirty marker re-rendered all three of them, grids included.
 export const GraphStudio = lazy(async () => ({
-  default: (await loadGraphStudio()).GraphStudio,
+  default: memo((await loadGraphStudio()).GraphStudio),
 }));
 
 export const TableStudio = lazy(async () => ({
-  default: (await loadTableStudio()).TableStudio,
+  default: memo((await loadTableStudio()).TableStudio),
 }));
 
 export const VaultStudio = lazy(async () => ({
-  default: (await loadVaultStudio()).VaultStudio,
+  default: memo((await loadVaultStudio()).VaultStudio),
 }));
 
 // Not resident: a Markdown note has no engine worth keeping warm. Its buffers

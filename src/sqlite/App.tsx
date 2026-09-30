@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { dbEngine } from './services/dbEngine';
+import { dbEngine, type ParkedDatabase } from './services/dbEngine';
 import {
   announceReady,
   onNativeFileOpened,
@@ -24,7 +24,7 @@ import type { DataBrowserNavigationFilter } from './components/DataBrowser';
 import type { ForeignKeyNavigationTarget } from './components/RelationalDataGrid';
 import type { MergeFilesReport } from './components/MergeFilesModal';
 import type { ImportedTable } from './services/importers';
-import { parseSourceDocument, type SourceDocument } from './services/importers/documents';
+import { parseSourceDocument } from './services/importers/documents';
 
 const StandaloneTableStudioView = lazy(async () => ({
   default: (await import('./components/StandaloneTableStudioView')).StandaloneTableStudioView,
@@ -111,7 +111,10 @@ export const TableStudio: React.FC<TableStudioProps> = ({
   const loadIntent = useRef(0);
   const tableFocusByTab = useRef(new Map<string, string>());
   const activeSourceSession = useRef<string | null>(null);
-  const sourceSessions = useRef(new Map<string, { bytes: Uint8Array; filename: string; document: SourceDocument | null; sourceInfo: Record<string, string> }>());
+  /** Sources of other tabs, kept open so switching back is instant. */
+  const sourceSessions = useRef(new Map<string, ParkedDatabase>());
+  /** requestVersion the active session was loaded for; a re-open bumps it. */
+  const activeSourceVersion = useRef<number | null>(null);
   const dirtySessions = useRef(new Set<string>());
   // `POST /open` adopts the database before the root tab descriptor catches up.
   // Remember that hand-off so the following prop update cannot save the newly
@@ -135,6 +138,13 @@ export const TableStudio: React.FC<TableStudioProps> = ({
     const stillExists = metadata.tables.some((t) => t.name === selectedTable);
     return stillExists ? selectedTable : metadata.tables[0].name;
   }, [metadata, selectedTable]);
+
+  const parkActiveSource = useCallback((session: string) => {
+    const parked = dbEngine.park();
+    const previous = sourceSessions.current.get(session);
+    if (previous && previous.db !== parked.db) dbEngine.discard(previous);
+    sourceSessions.current.set(session, parked);
+  }, []);
 
   const adoptMetadata = useCallback((meta: DatabaseMetadata) => {
     setMetadata(meta);
@@ -177,6 +187,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
       );
       if (opened) {
         activeSourceSession.current = null;
+        activeSourceVersion.current = null;
         setIsDirty(false);
         onSourceChanged?.({ name: opened.filename, path: null });
       }
@@ -196,6 +207,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
       );
       if (opened) {
         activeSourceSession.current = file.path;
+        activeSourceVersion.current = null;
         dirtySessions.current.delete(file.path);
         setIsDirty(false);
         onSourceChanged?.({ name: opened.filename, path: file.path, pendingWal: file.pendingWal });
@@ -219,7 +231,11 @@ export const TableStudio: React.FC<TableStudioProps> = ({
     if (!disposeEvent) return;
     tableFocusByTab.current.delete(disposeEvent.tabId);
     if (!disposeEvent.releaseSession) return;
-    sourceSessions.current.delete(disposeEvent.sessionKey);
+    const parked = sourceSessions.current.get(disposeEvent.sessionKey);
+    if (parked) {
+      sourceSessions.current.delete(disposeEvent.sessionKey);
+      dbEngine.discard(parked);
+    }
     dirtySessions.current.delete(disposeEvent.sessionKey);
     if (!disposeEvent.unloadActive) return;
 
@@ -228,6 +244,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
     loadIntent.current += 1;
     directSourceAdoption.current = null;
     activeSourceSession.current = null;
+    activeSourceVersion.current = null;
     dbEngine.close();
     setMetadata(null);
     setSelectedTable(null);
@@ -252,6 +269,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
     ) {
       directSourceAdoption.current = null;
       activeSourceSession.current = targetSession;
+      activeSourceVersion.current = requestVersion;
       setIsDirty(dirtySessions.current.has(targetSession));
       setActiveFileId(requestedPath);
       return;
@@ -259,13 +277,20 @@ export const TableStudio: React.FC<TableStudioProps> = ({
     // A different root-level source superseded the pending hand-off.
     directSourceAdoption.current = null;
     const previousSession = activeSourceSession.current;
+    // Switching away and back before the other source finished loading: the
+    // engine still holds this exact session, including unsaved edits.
+    if (
+      previousSession === targetSession
+      && activeSourceVersion.current === requestVersion
+      && dbEngine.isLoaded()
+    ) {
+      setIsLoading(false);
+      setIsDirty(dirtySessions.current.has(targetSession));
+      setActiveFileId(requestedPath);
+      return;
+    }
     if (previousSession && previousSession !== targetSession && dbEngine.isLoaded()) {
-      sourceSessions.current.set(previousSession, {
-        bytes: dbEngine.exportDatabase(),
-        filename: dbEngine.getFilename(),
-        document: dbEngine.sourceDocument,
-        sourceInfo: dbEngine.sourceInfo,
-      });
+      parkActiveSource(previousSession);
     }
 
     const restore = previousSession !== targetSession
@@ -274,9 +299,9 @@ export const TableStudio: React.FC<TableStudioProps> = ({
     const load = restore
       ? openDatabase(
           async (isCurrent) => {
-            const meta = await dbEngine.loadDatabase(restore.bytes, restore.filename, isCurrent);
-            if (meta) { dbEngine.sourceDocument = restore.document; dbEngine.sourceInfo = restore.sourceInfo; }
-            return meta;
+            if (!isCurrent()) return null;
+            sourceSessions.current.delete(targetSession);
+            return dbEngine.resume(restore);
           },
           intent
         )
@@ -295,6 +320,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
       .then((opened) => {
         if (!opened || cancelled || intent !== loadIntent.current) return;
         activeSourceSession.current = targetSession;
+        activeSourceVersion.current = requestVersion;
         setIsDirty(dirtySessions.current.has(targetSession));
         setActiveFileId(requestedPath);
         onSourceChanged?.({ name: opened.filename, path: requestedPath, pendingWal });
@@ -316,7 +342,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
       cancelled = true;
       if (loadIntent.current === intent) loadIntent.current += 1;
     };
-  }, [onSourceChanged, openDatabase, pendingWal, reportError, requestedPath, requestVersion, sourceSessionKey]);
+  }, [onSourceChanged, openDatabase, parkActiveSource, pendingWal, reportError, requestedPath, requestVersion, sourceSessionKey]);
 
   const handleOpenFileClick = useCallback(() => {
     onSourceIntent?.();
@@ -375,6 +401,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
     if (!opened) return;
     const targetSession = `table\u0000${report.targetFilename}\u0000`;
     activeSourceSession.current = targetSession;
+    activeSourceVersion.current = null;
     dirtySessions.current.add(targetSession);
     setIsDirty(true);
     setIsMergeOpen(false);
@@ -415,14 +442,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
       const isCurrent = () => intent === loadIntent.current;
       if (!isCurrent()) throw new Error('Der Ladevorgang wurde durch eine neuere Aktion ersetzt.');
       const previousSession = activeSourceSession.current;
-      if (previousSession && dbEngine.isLoaded()) {
-        sourceSessions.current.set(previousSession, {
-          bytes: dbEngine.exportDatabase(),
-          filename: dbEngine.getFilename(),
-          document: dbEngine.sourceDocument,
-          sourceInfo: dbEngine.sourceInfo,
-        });
-      }
+      if (previousSession && dbEngine.isLoaded()) parkActiveSource(previousSession);
       const filename = path.split('/').pop() || path;
       const meta = await openAsDatabase(buffer, filename, isCurrent);
       if (!meta || !isCurrent()) {
@@ -431,10 +451,12 @@ export const TableStudio: React.FC<TableStudioProps> = ({
       if (requestedPath === path) {
         // Same-path reload: no root prop changes, so keep the existing key now.
         activeSourceSession.current = sourceSessionKey ?? path;
+        activeSourceVersion.current = requestVersion;
         directSourceAdoption.current = null;
       } else {
         // New path: the root will provide its canonical source identity next.
         activeSourceSession.current = null;
+        activeSourceVersion.current = null;
         directSourceAdoption.current = { path, filename: meta.filename };
       }
       setActiveFileId(null);
@@ -451,7 +473,7 @@ export const TableStudio: React.FC<TableStudioProps> = ({
       setOpenPathHandler(undefined);
       setDatabaseChangedHandler(undefined);
     };
-  }, [adoptMetadata, handleDatabaseChanged, onExternalOpen, onSourceChanged, onSourceIntent, requestedPath, sourceSessionKey]);
+  }, [adoptMetadata, handleDatabaseChanged, onExternalOpen, onSourceChanged, onSourceIntent, parkActiveSource, requestVersion, requestedPath, sourceSessionKey]);
 
   // Keeps `/api/v1/health` answerable without waiting on the renderer.
   useEffect(() => {

@@ -45,6 +45,20 @@ const elapsedSince = (start: number) => Math.round((performance.now() - start) *
  * Statements that actually write rows. `sqlite3_changes()` keeps the count of
  * the last write, so asking it after a SELECT would report a stale number.
  */
+/**
+ * A database taken out of the engine without closing it. Switching tabs parks
+ * the outgoing source and resumes the incoming one: a pointer swap instead of
+ * serialising, re-parsing and re-counting a whole database on the UI thread.
+ */
+export interface ParkedDatabase {
+  db: Database;
+  filename: string;
+  fileSize: number;
+  sourceDocument: SourceDocument | null;
+  sourceInfo: Record<string, string>;
+  metadata: DatabaseMetadata | null;
+}
+
 const DML_PATTERN = /^\s*(?:WITH\b[\s\S]*?\)\s*)?(INSERT|UPDATE|DELETE|REPLACE)\b/i;
 
 class DBEngine {
@@ -55,6 +69,10 @@ class DBEngine {
   private filename = '';
   private fileSize = 0;
   private initPromise: Promise<SqlJsStatic> | null = null;
+  /** Result of the last metadata read, reused when a parked source resumes. */
+  private metadata: DatabaseMetadata | null = null;
+  /** Parked handles; replacing one in the engine must not close it. */
+  private readonly parked = new WeakSet<Database>();
 
   /**
    * Loads the SQLite WebAssembly binary. It is bundled with the app (public/),
@@ -178,13 +196,43 @@ class DBEngine {
   close(): void {
     this.sourceDocument = null;
     this.sourceInfo = {};
+    this.metadata = null;
     if (!this.db) return;
-    try {
-      this.db.close();
-    } catch (err) {
-      console.warn('Fehler beim Schließen der vorherigen Datenbank', err);
-    }
+    if (!this.parked.has(this.db)) closeQuietly(this.db);
     this.db = null;
+  }
+
+  /** Snapshot of the open source that survives the engine loading another. */
+  park(): ParkedDatabase {
+    if (!this.db) throw new Error('Keine Datenbank geladen.');
+    this.parked.add(this.db);
+    return {
+      db: this.db,
+      filename: this.filename,
+      fileSize: this.fileSize,
+      sourceDocument: this.sourceDocument,
+      sourceInfo: this.sourceInfo,
+      metadata: this.metadata,
+    };
+  }
+
+  /** Makes a parked source current again, without reading anything from disk. */
+  resume(parked: ParkedDatabase): DatabaseMetadata {
+    if (this.db !== parked.db) this.close();
+    this.parked.delete(parked.db);
+    this.db = parked.db;
+    this.filename = parked.filename;
+    this.fileSize = parked.fileSize;
+    this.sourceDocument = parked.sourceDocument;
+    this.sourceInfo = parked.sourceInfo;
+    this.metadata = parked.metadata;
+    return this.metadata ?? this.getDatabaseMetadata();
+  }
+
+  /** Frees a parked source. The open one is only unmarked; close() ends it. */
+  discard(parked: ParkedDatabase): void {
+    this.parked.delete(parked.db);
+    if (this.db !== parked.db) closeQuietly(parked.db);
   }
 
   isLoaded(): boolean {
@@ -385,7 +433,7 @@ class DBEngine {
       });
     }
 
-    return {
+    this.metadata = {
       filename: this.filename,
       fileSize: this.fileSize,
       tableCount: tables.filter((t) => t.type === 'table').length,
@@ -398,6 +446,7 @@ class DBEngine {
       encoding: this.selectScalarString('PRAGMA encoding;', 'UTF-8'),
       journalMode: this.selectScalarString('PRAGMA journal_mode;', 'delete'),
     };
+    return this.metadata;
   }
 
   checkIntegrity(): { ok: boolean; message: string } {
@@ -532,3 +581,11 @@ class DBEngine {
 }
 
 export const dbEngine = new DBEngine();
+
+function closeQuietly(db: Database): void {
+  try {
+    db.close();
+  } catch (err) {
+    console.warn('Fehler beim Schließen der vorherigen Datenbank', err);
+  }
+}

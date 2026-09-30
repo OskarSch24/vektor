@@ -49,6 +49,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const layoutRef = useRef(new ForceLayout());
   const viewportRef = useRef<Viewport>({ x: 0, y: 0, scale: 1 });
   const frameRef = useRef(0);
+  /** Schedules one frame; a settled graph is not repainted 60 times a second. */
+  const paintRef = useRef<() => void>(() => undefined);
+  const requestPaint = useCallback(() => paintRef.current(), []);
   const hoveredRef = useRef<string | null>(null);
   const dragRef = useRef<{
     nodeId: string | null;
@@ -166,17 +169,24 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
     };
 
-    resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(container);
+    let scheduled = false;
+    const schedule = () => {
+      if (scheduled) return;
+      scheduled = true;
+      frameRef.current = requestAnimationFrame(draw);
+    };
 
     const draw = () => {
+      scheduled = false;
       const layout = layoutRef.current;
+      let moving = false;
       if (layoutMode === 'force' && isRunning) {
+        moving = true;
         // Several ticks per frame: the simulation converges in wall-clock time
         // the user is willing to watch, without raising the frame rate.
         for (let i = 0; i < 3; i += 1) {
           if (!layout.tick()) {
+            moving = false;
             setIsRunning(false);
             break;
           }
@@ -200,11 +210,21 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         layoutMode,
       });
 
-      frameRef.current = requestAnimationFrame(draw);
+      // Only a running simulation needs the next frame; interaction and
+      // resizing ask for theirs through requestPaint.
+      if (moving) schedule();
     };
 
-    frameRef.current = requestAnimationFrame(draw);
+    resize();
+    const observer = new ResizeObserver(() => {
+      resize();
+      schedule();
+    });
+    observer.observe(container);
+    paintRef.current = schedule;
+    schedule();
     return () => {
+      paintRef.current = () => undefined;
       cancelAnimationFrame(frameRef.current);
       observer.disconnect();
     };
@@ -263,12 +283,14 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         const position = layoutRef.current.getNode(hit)!;
         layoutRef.current.setPosition(hit, position.x, position.y, false);
         layoutRef.current.reheat(0.25);
+        setIsRunning(true);
         dragRef.current = null;
         return;
       }
       const world = toWorld(event.clientX, event.clientY);
       layoutRef.current.setPosition(hit, world.x, world.y, true);
     }
+    requestPaint();
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -279,6 +301,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       if (hit !== hoveredRef.current) {
         hoveredRef.current = hit;
         event.currentTarget.style.cursor = hit ? 'pointer' : 'grab';
+        requestPaint();
       }
       return;
     }
@@ -297,6 +320,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
     drag.lastX = event.clientX;
     drag.lastY = event.clientY;
+    requestPaint();
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -308,7 +332,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const moved = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 3;
       const position = layoutRef.current.getNode(drag.nodeId);
       if (position) layoutRef.current.setPosition(drag.nodeId, position.x, position.y, moved);
-      if (moved) layoutRef.current.reheat(0.2);
+      if (moved) {
+        layoutRef.current.reheat(0.2);
+        setIsRunning(true);
+      }
     }
     dragRef.current = null;
     event.currentTarget.releasePointerCapture(event.pointerId);
@@ -332,6 +359,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     viewport.y = pointerY - ((pointerY - viewport.y) / viewport.scale) * scale;
     viewport.scale = scale;
     setZoomLabel(Math.round(scale * 100));
+    requestPaint();
   };
 
   const zoomBy = (factor: number) => {
@@ -346,6 +374,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     viewport.y = centreY - ((centreY - viewport.y) / viewport.scale) * scale;
     viewport.scale = scale;
     setZoomLabel(Math.round(scale * 100));
+    requestPaint();
   };
 
   return (
@@ -416,6 +445,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               setIsRunning(true);
             }
             fitToView();
+            requestPaint();
           }}
           title={layoutMode === 'hierarchy'
             ? 'Gesamte Hierarchie einpassen'
