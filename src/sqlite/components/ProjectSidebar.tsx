@@ -29,7 +29,8 @@ const FORMAT_STYLE: Record<FileFormat, { icon: React.ReactNode; label: string; t
   sqlite: { icon: <Database className="w-3.5 h-3.5" />, label: 'SQLite', tint: 'text-apple-blue/80' },
   csv: { icon: <FileSpreadsheet className="w-3.5 h-3.5" />, label: 'CSV', tint: 'text-apple-green/80' },
   json: { icon: <FileJson className="w-3.5 h-3.5" />, label: 'JSON', tint: 'text-apple-amber/80' },
-  xlsx: { icon: <FileSpreadsheet className="w-3.5 h-3.5" />, label: 'Excel', tint: 'text-apple-cyan/80' },
+  xlsx: { icon: <FileSpreadsheet className="w-3.5 h-3.5" />, label: 'Tabellenkalkulation', tint: 'text-apple-cyan/80' },
+  sql: { icon: <Database className="w-3.5 h-3.5" />, label: 'SQL-Dump', tint: 'text-apple-blue/80' },
 };
 
 interface ProjectSidebarProps {

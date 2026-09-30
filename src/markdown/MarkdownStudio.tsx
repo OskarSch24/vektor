@@ -28,6 +28,7 @@ import {
   splitFrontmatter,
 } from './render';
 import { markdownBuffers as buffers, type MarkdownBuffer } from './buffers';
+import { isNotebookName, notebookToMarkdown } from './notebook';
 import './markdown.css';
 
 type ViewMode = 'preview' | 'split' | 'source';
@@ -67,7 +68,10 @@ export const MarkdownStudio: FC<MarkdownStudioProps> = ({
   const [, setRevision] = useState(0);
   const buffer = buffers.get(sessionKey) ?? null;
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<ViewMode>(readStoredMode);
+  const [storedMode, setMode] = useState<ViewMode>(readStoredMode);
+  /** Notebooks are rendered from JSON; editing that as Markdown would corrupt them. */
+  const readOnly = isNotebookName(source.name);
+  const mode: ViewMode = readOnly ? 'preview' : storedMode;
   const [isSaving, setIsSaving] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -92,15 +96,16 @@ export const MarkdownStudio: FC<MarkdownStudioProps> = ({
     }
     try {
       const file = await files.read(path);
+      const contents = readOnly ? notebookToMarkdown(file.contents) : file.contents;
       const current = buffers.get(sessionKey);
       if (current && current.text !== current.saved && !force) return;
-      if (current && current.saved === file.contents && current.text === file.contents) return;
+      if (current && current.saved === contents && current.text === contents) return;
       setError(null);
-      commit({ path, saved: file.contents, text: file.contents });
+      commit({ path, saved: contents, text: contents });
     } catch (err) {
       setError(`„${source.name}“ konnte nicht gelesen werden: ${err instanceof Error ? err.message : String(err)}`);
     }
-  }, [commit, path, sessionKey, source.name]);
+  }, [commit, path, readOnly, sessionKey, source.name]);
 
   useEffect(() => {
     setError(null);
@@ -135,7 +140,7 @@ export const MarkdownStudio: FC<MarkdownStudioProps> = ({
 
   const save = useCallback(async () => {
     const current = buffers.get(sessionKey);
-    if (!current || current.text === current.saved || isSaving) return;
+    if (readOnly || !current || current.text === current.saved || isSaving) return;
     setIsSaving(true);
     try {
       await files.write(current.path, current.text);
@@ -146,7 +151,7 @@ export const MarkdownStudio: FC<MarkdownStudioProps> = ({
     } finally {
       setIsSaving(false);
     }
-  }, [commit, isSaving, onNotice, sessionKey]);
+  }, [commit, isSaving, onNotice, readOnly, sessionKey]);
 
   useEffect(() => {
     const onSaveRequest = () => void save();
@@ -273,11 +278,15 @@ export const MarkdownStudio: FC<MarkdownStudioProps> = ({
   return (
     <div className="markdown-studio flex h-full min-h-0 flex-col bg-[#181818]">
       <header className="markdown-toolbar">
-        <div className="markdown-mode" role="tablist" aria-label="Ansicht">
-          <ModeButton mode="preview" current={mode} onSelect={changeMode} icon={Eye} label="Lesen" />
-          <ModeButton mode="split" current={mode} onSelect={changeMode} icon={Columns2} label="Geteilt" />
-          <ModeButton mode="source" current={mode} onSelect={changeMode} icon={PenLine} label="Bearbeiten" />
-        </div>
+        {readOnly ? (
+          <span className="markdown-readonly">Notebook · nur lesen</span>
+        ) : (
+          <div className="markdown-mode" role="tablist" aria-label="Ansicht">
+            <ModeButton mode="preview" current={mode} onSelect={changeMode} icon={Eye} label="Lesen" />
+            <ModeButton mode="split" current={mode} onSelect={changeMode} icon={Columns2} label="Geteilt" />
+            <ModeButton mode="source" current={mode} onSelect={changeMode} icon={PenLine} label="Bearbeiten" />
+          </div>
+        )}
         <span className="markdown-stats">
           {stats.words.toLocaleString('de-DE')} Wörter · {stats.lines.toLocaleString('de-DE')} Zeilen · ~{stats.minutes} Min.
         </span>
@@ -296,15 +305,17 @@ export const MarkdownStudio: FC<MarkdownStudioProps> = ({
         >
           <RotateCw className="h-3.5 w-3.5" strokeWidth={1.7} />
         </button>
-        <button
-          className="markdown-tool markdown-save"
-          onClick={() => void save()}
-          disabled={!dirty || isSaving}
-          title="Speichern (⌘S)"
-        >
-          <Save className="h-3.5 w-3.5" strokeWidth={1.7} />
-          <span>Sichern</span>
-        </button>
+        {!readOnly && (
+          <button
+            className="markdown-tool markdown-save"
+            onClick={() => void save()}
+            disabled={!dirty || isSaving}
+            title="Speichern (⌘S)"
+          >
+            <Save className="h-3.5 w-3.5" strokeWidth={1.7} />
+            <span>Sichern</span>
+          </button>
+        )}
       </header>
 
       {error ? (

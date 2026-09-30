@@ -133,6 +133,10 @@
 				<string>gexf</string>
 				<string>dot</string>
 				<string>gv</string>
+				<string>sql</string>
+				<string>kml</string>
+				<string>gpx</string>
+				<string>ipynb</string>
 			</array>
 		</dict>
 		<dict>

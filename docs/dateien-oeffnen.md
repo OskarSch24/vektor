@@ -14,6 +14,9 @@ Neue Dateitypen öffnen sich im vorhandenen Tab: im Explorer anklicken oder übe
 | `.dbconnection.json` / `.dbconnection` | Tabellen oder Sammlungen einer Serverdatenbank als lesende lokale Arbeitskopie |
 | Excel 97–2003 (`.xls`), OpenDocument (`.ods`), Numbers (`.numbers`) | Tabelle je Blatt; Formeln zeigen ihren gespeicherten Wert, Makros laufen nie |
 | Mit gzip gepackt (`.csv.gz`, `.jsonl.gz`, `.json.gz`, `.sqlite.gz` …) | Wie die enthaltene Datei; wird beim Öffnen entpackt (höchstens 1 GB) |
+| SQL-Dumps (`.sql`, auch `.sql.gz`) | Tabellen einer SQLite-Arbeitskopie; `sqlite3 .dump` direkt, `mysqldump` und `pg_dump` (inkl. `COPY`) angepasst. Übersprungene und nicht ausführbare Anweisungen stehen als Hinweis an der Tabelle |
+| KML, GPX (`.kml`, `.gpx`) | Wie GeoJSON: Struktur, Originaltext, Tabelle und „Ansicht → Karte“ mit Orten, Routen und Tracks |
+| Jupyter-Notebooks (`.ipynb`) | Nur lesen im Markdown-Tab: Text, Code und gespeicherte Ausgaben samt Diagrammen; nichts wird ausgeführt |
 | GraphML, GEXF, Graphviz (`.graphml`, `.gexf`, `.dot`, `.gv`) | Graph; das Original bleibt unverändert, `⌘S` sichert als neue `.graph`-Datei |
 | Markdown (`.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`) | Eigener Markdown-Tab: Lesen, Geteilt oder Bearbeiten; `⌘S` speichert in die Datei |
 

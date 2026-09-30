@@ -285,3 +285,19 @@
   color: var(--cursor-text-faint);
   font-style: italic;
 }
+
+.markdown-readonly {
+  padding: 0 8px;
+  color: var(--cursor-text-muted);
+}
+
+.md-notebook-meta {
+  color: var(--cursor-text-faint);
+  font-size: 12px;
+}
+
+.md-prose .md-notebook-prompt {
+  margin: 1.4em 0 0.3em;
+  color: var(--cursor-text-faint);
+  font: 11px ui-monospace, 'SF Mono', Menlo, monospace;
+}

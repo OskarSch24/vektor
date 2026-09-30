@@ -5,7 +5,7 @@ import { importXlsx } from './xlsx';
 import { documentTables, parseSourceDocument } from './documents';
 
 /** File formats the app can open. `sqlite` is read natively, the rest are imported. */
-export type FileFormat = 'sqlite' | 'csv' | 'json' | 'xlsx' | 'document' | 'parquet' | 'arrow' | 'duckdb' | 'connection';
+export type FileFormat = 'sqlite' | 'csv' | 'json' | 'xlsx' | 'document' | 'parquet' | 'arrow' | 'duckdb' | 'connection' | 'sql';
 
 interface FormatSpec {
   format: FileFormat;
@@ -18,11 +18,12 @@ export const FORMATS: FormatSpec[] = [
   { format: 'csv', label: 'CSV', extensions: ['csv', 'tsv'] },
   { format: 'json', label: 'JSON', extensions: ['json', 'jsonl', 'ndjson'] },
   { format: 'xlsx', label: 'Tabellenkalkulation', extensions: ['xlsx', 'xlsm', 'xls', 'ods', 'numbers'] },
-  { format: 'document', label: 'Dokument', extensions: ['yaml', 'yml', 'toml', 'xml', 'geojson'] },
+  { format: 'document', label: 'Dokument', extensions: ['yaml', 'yml', 'toml', 'xml', 'geojson', 'kml', 'gpx'] },
   { format: 'parquet', label: 'Parquet', extensions: ['parquet'] },
   { format: 'arrow', label: 'Arrow', extensions: ['arrow', 'feather', 'ipc'] },
   { format: 'duckdb', label: 'DuckDB', extensions: ['duckdb'] },
   { format: 'connection', label: 'Datenbankverbindung', extensions: ['dbconnection'] },
+  { format: 'sql', label: 'SQL-Dump', extensions: ['sql'] },
 ];
 
 /** Every extension the app offers in file dialogs and looks for in projects. */
@@ -74,6 +75,8 @@ export async function importTables(
     case 'duckdb':
     case 'connection':
       return (await import('./remote')).importRemote(bytes, filename, format);
+    case 'sql':
+      throw new Error(`„${filename}“ ist ein SQL-Dump und lässt sich nur direkt öffnen.`);
   }
 }
 

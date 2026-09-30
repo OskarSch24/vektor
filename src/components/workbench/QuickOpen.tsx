@@ -75,6 +75,8 @@ const FILE_TYPE_LABELS: Partial<Record<NonNullable<ProjectFileNode['fileType']>,
   'redis-rdb': 'RDB',
   'redis-aof': 'AOF',
   markdown: 'MARKDOWN',
+  notebook: 'NOTEBOOK',
+  sql: 'SQL',
 };
 
 /** Exposed for focused tests and future command-palette reuse. */
@@ -543,6 +545,7 @@ function iconForFile(file: ProjectFileNode) {
     case 'phase-x-run':
       return Network;
     case 'sqlite':
+    case 'sql':
       return Database;
     case 'csv':
     case 'excel':
@@ -553,6 +556,7 @@ function iconForFile(file: ProjectFileNode) {
     case 'redis-aof':
       return HardDrive;
     case 'markdown':
+    case 'notebook':
       return FileText;
     default:
       return Braces;
@@ -568,6 +572,7 @@ function iconColor(file: ProjectFileNode): string {
     case 'redis-aof':
       return 'text-[var(--cursor-amber)]';
     case 'markdown':
+    case 'notebook':
       return 'text-[var(--cursor-blue)]';
     default:
       return 'text-[var(--cursor-cyan)]';

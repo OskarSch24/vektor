@@ -642,7 +642,8 @@ function isPhaseXRunFile(file: ProjectFileNode): boolean {
 
 function iconForFile(file: ProjectFileNode) {
   switch (file.fileType) {
-    case 'sqlite': return Database;
+    case 'sqlite':
+    case 'sql': return Database;
     case 'csv':
     case 'excel': return FileSpreadsheet;
     case 'json-table':
@@ -654,14 +655,16 @@ function iconForFile(file: ProjectFileNode) {
     case 'redis-rdb':
     case 'redis-aof': return HardDrive;
     case 'phase-x-run': return FileJson2;
-    case 'markdown': return FileText;
+    case 'markdown':
+    case 'notebook': return FileText;
     default: return Network;
   }
 }
 
 function colourForFile(file: ProjectFileNode): string {
   switch (file.fileType) {
-    case 'sqlite': return 'text-[#86a8ca]';
+    case 'sqlite':
+    case 'sql': return 'text-[#86a8ca]';
     case 'csv':
     case 'excel': return 'text-[#7fa98b]';
     case 'json-table':
@@ -673,7 +676,8 @@ function colourForFile(file: ProjectFileNode): string {
     case 'redis-rdb':
     case 'redis-aof': return 'text-[#b5a078]';
     case 'phase-x-run': return 'text-[#91a68e]';
-    case 'markdown': return 'text-[#82acd3]';
+    case 'markdown':
+    case 'notebook': return 'text-[#82acd3]';
     default: return 'text-[#9d91ad]';
   }
 }

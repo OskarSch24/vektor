@@ -26,7 +26,7 @@ export async function loadFilesForMerge(
   const loaded = await Promise.all(
     files.map(async (file) => {
       const format = detectFormat(file.name);
-      if (format === null || format === 'sqlite') {
+      if (format === null || format === 'sqlite' || format === 'sql') {
         throw new Error(
           `„${file.name}“ kann hier nicht zusammengeführt werden. Unterstützt werden CSV, TSV, JSON, JSONL und Excel.`
         );

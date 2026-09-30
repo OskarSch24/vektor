@@ -50,6 +50,10 @@ async function openAsDatabase(
     return dbEngine.loadDatabase(buffer, filename, shouldAdopt);
   }
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  if (format === 'sql') {
+    const text = new TextDecoder().decode(bytes).replace(/^\uFEFF/, '');
+    return dbEngine.loadScript(text, filename, bytes.byteLength, shouldAdopt);
+  }
   const document = format === 'json' || format === 'document' ? parseSourceDocument(bytes, filename) : null;
   const tables = await importTables(bytes, filename, format);
   if (!shouldAdopt()) return null;

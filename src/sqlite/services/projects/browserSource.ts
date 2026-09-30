@@ -58,7 +58,8 @@ async function isSupportedDataFile(file: File): Promise<boolean> {
       case 'sqlite':
         return hasSqliteHeader(head);
       case 'xlsx':
-        return hasZipHeader(head);
+        // .xlsx/.ods/.numbers are zip containers, legacy .xls is an OLE file.
+        return hasZipHeader(head) || (head[0] === 0xd0 && head[1] === 0xcf && head[2] === 0x11 && head[3] === 0xe0);
       case 'json':
       case 'csv':
       case 'document':
@@ -66,6 +67,7 @@ async function isSupportedDataFile(file: File): Promise<boolean> {
       case 'arrow':
       case 'duckdb':
       case 'connection':
+      case 'sql':
         return true;
     }
   } catch {

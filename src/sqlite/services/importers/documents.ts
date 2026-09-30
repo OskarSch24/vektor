@@ -3,6 +3,7 @@ import { parse as parseToml } from "smol-toml";
 import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { importJson } from "./json";
 import type { ImportedTable } from "./tables";
+import { geoFormatToGeoJson } from "./geoFormats";
 
 export interface SourceDocument {
   format: string;
@@ -25,6 +26,8 @@ export function parseSourceDocument(
       "toml",
       "xml",
       "geojson",
+      "kml",
+      "gpx",
     ].includes(ext ?? "")
   )
     return null;
@@ -35,6 +38,7 @@ export function parseSourceDocument(
     if (doc.errors.length) throw new Error(doc.errors[0].message);
     value = doc.toJS({ maxAliasCount: 100 });
   } else if (ext === "toml") value = parseToml(text);
+  else if (ext === "kml" || ext === "gpx") value = geoFormatToGeoJson(text, ext);
   else if (ext === "xml") {
     const valid = XMLValidator.validate(text);
     if (valid !== true)

@@ -17,7 +17,9 @@ export interface ProjectFileNode {
     | 'connection'
     | 'redis-rdb'
     | 'redis-aof'
-    | 'markdown';
+    | 'markdown'
+    | 'notebook'
+    | 'sql';
   /** The absolute path — stable across re-scans, so it doubles as the id. */
   id: string;
   name: string;

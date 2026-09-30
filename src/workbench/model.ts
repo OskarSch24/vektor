@@ -115,6 +115,7 @@ export function workspaceFor(file: Pick<ProjectFileNode, 'fileType' | 'name'>): 
     case 'arrow':
     case 'duckdb':
     case 'connection':
+    case 'sql':
       return 'table';
     case 'redis-rdb':
     case 'redis-aof':
@@ -123,13 +124,14 @@ export function workspaceFor(file: Pick<ProjectFileNode, 'fileType' | 'name'>): 
     case 'phase-x-run':
       return 'graph';
     case 'markdown':
+    case 'notebook':
       return 'markdown';
     default: {
       const lower = file.name.toLocaleLowerCase();
-      if (/\.(?:sqlite3?|sqlite2|db3?|csv|tsv|jsonl|ndjson|xlsx|xlsm|xls|ods|numbers)$/.test(lower)) return 'table';
+      if (/\.(?:sqlite3?|sqlite2|db3?|csv|tsv|jsonl|ndjson|xlsx|xlsm|xls|ods|numbers|sql)$/.test(lower)) return 'table';
       if (GRAPH_EXCHANGE_NAME.test(lower)) return 'graph';
       if (/\.(?:rdb|aof)$/.test(lower) || lower.endsWith('.aof.manifest')) return 'vault';
-      if (MARKDOWN_NAME.test(lower)) return 'markdown';
+      if (MARKDOWN_NAME.test(lower) || lower.endsWith('.ipynb')) return 'markdown';
       return 'graph';
     }
   }
@@ -142,7 +144,7 @@ export const MARKDOWN_NAME = /\.(?:md|markdown|mdown|mkd|mkdn)$/;
 export const GRAPH_EXCHANGE_NAME = /\.(?:graphml|gexf|dot|gv)$/;
 
 /** Compressed files a table import can unpack: `daten.csv.gz`, `export.jsonl.gz`. */
-const GZIP_TABLE_NAME = /\.(?:csv|tsv|json|jsonl|ndjson|sqlite3?|db3?|ya?ml|xml|toml|geojson)\.gz$/;
+const GZIP_TABLE_NAME = /\.(?:csv|tsv|json|jsonl|ndjson|sqlite3?|db3?|ya?ml|xml|toml|geojson|kml|gpx|sql)\.gz$/;
 
 export function fileTypeForName(name: string): ProjectFileNode['fileType'] {
   const lower = name.toLocaleLowerCase();
@@ -154,7 +156,9 @@ export function fileTypeForName(name: string): ProjectFileNode['fileType'] {
   if (GRAPH_EXCHANGE_NAME.test(lower)) return 'graph';
   if (/\.dbconnection(?:\.json)?$/.test(lower)) return 'connection';
   if (MARKDOWN_NAME.test(lower)) return 'markdown';
-  if (/\.(?:ya?ml|xml|toml|geojson)$/.test(lower)) return 'document';
+  if (lower.endsWith('.ipynb')) return 'notebook';
+  if (lower.endsWith('.sql')) return 'sql';
+  if (/\.(?:ya?ml|xml|toml|geojson|kml|gpx)$/.test(lower)) return 'document';
   if (/\.(?:arrow|feather|ipc)$/.test(lower)) return 'arrow';
   if (lower.endsWith('.parquet')) return 'parquet';
   if (lower.endsWith('.duckdb')) return 'duckdb';
@@ -180,6 +184,7 @@ export function sourceLabel(source: ActiveSource): string {
   if (source.kind === 'graph') return 'Graph';
   if (source.kind === 'table') return 'Tabelle';
   if (source.kind === 'vault') return 'Redis';
+  if (source.fileType === 'notebook') return 'Notebook';
   if (source.kind === 'markdown') return 'Markdown';
   return 'Start';
 }

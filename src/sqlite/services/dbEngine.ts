@@ -183,6 +183,56 @@ class DBEngine {
     return metadata;
   }
 
+  /**
+   * Runs an SQL dump into a fresh in-memory database. Each statement gets its
+   * own savepoint, so one dialect quirk costs one statement, not the import.
+   */
+  async loadScript(
+    text: string,
+    filename: string,
+    sourceSize: number,
+    shouldAdopt: () => boolean = () => true
+  ): Promise<DatabaseMetadata | null> {
+    const SQL = await this.init();
+    const { runDump } = await import('./importers/sqlDump');
+    if (!shouldAdopt()) return null;
+    const next = new SQL.Database();
+    let result;
+    try {
+      result = runDump(next, text);
+    } catch (err: any) {
+      next.close();
+      throw new Error(`"${filename}" konnte nicht eingespielt werden: ${err?.message || err}`);
+    }
+    const { executed, skipped, failures } = result;
+
+    const tableCount = Number(next.exec(
+      "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite\\_%' ESCAPE '\\';"
+    )[0]?.values[0]?.[0] ?? 0);
+    if (tableCount === 0) {
+      next.close();
+      throw new Error(
+        `"${filename}" enthält keine Tabellen, die sich einspielen lassen.`
+        + (failures.length ? ` Erster Fehler: ${failures[0]}` : '')
+      );
+    }
+    if (!shouldAdopt()) {
+      next.close();
+      return null;
+    }
+
+    const metadata = this.adopt(next, filename, sourceSize);
+    const summary = [
+      `${filename} · ${executed.toLocaleString('de-DE')} Anweisungen eingespielt`,
+      skipped ? `${skipped.toLocaleString('de-DE')} Serververwaltung übersprungen` : '',
+      failures.length
+        ? `${failures.length.toLocaleString('de-DE')} nicht ausführbar, z. B. ${failures.slice(0, 2).join('; ')}`
+        : '',
+    ].filter(Boolean).join(' · ');
+    this.sourceInfo = Object.fromEntries(metadata.tables.map((table) => [table.name, `${summary}. SQL arbeitet auf der lokalen Kopie.`]));
+    return metadata;
+  }
+
   /** Replaces the open database, closing the previous one first. */
   private adopt(next: Database, filename: string, fileSize: number): DatabaseMetadata {
     this.close();

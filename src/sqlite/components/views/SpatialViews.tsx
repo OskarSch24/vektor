@@ -20,7 +20,17 @@ const point = ([lon, lat]: number[]) => [
   250 - (lat / 90) * 250,
 ];
 function geometryPath(geometry: any): string {
+  if (geometry?.type === "GeometryCollection" && Array.isArray(geometry.geometries))
+    return geometry.geometries.map(geometryPath).join(" ");
   if (!geometry || !Array.isArray(geometry.coordinates)) return "";
+  const dot = (p: number[]) => {
+    if (!validPosition(p)) return "";
+    const [x, y] = point(p);
+    return `M${x - 2.5},${y} a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0`;
+  };
+  if (geometry.type === "Point") return dot(geometry.coordinates);
+  if (geometry.type === "MultiPoint")
+    return geometry.coordinates.map((p: number[]) => dot(p)).join(" ");
   const line = (coordinates: number[][], close: boolean) =>
     !Array.isArray(coordinates) || !coordinates.every(validPosition)
       ? ""
@@ -41,6 +51,12 @@ function geometryPath(geometry: any): string {
       .map((c: number[][]) => line(c, false))
       .join(" ");
   return "";
+}
+/** Areas and point markers are filled; open lines must not be. */
+function isFilled(geometry: any): boolean {
+  if (geometry?.type === "GeometryCollection")
+    return Array.isArray(geometry.geometries) && geometry.geometries.every(isFilled);
+  return /Polygon|Point/.test(geometry?.type ?? "");
 }
 const landPath =
   geoPath(
@@ -199,7 +215,7 @@ export function MapView({
             <path
               key={i}
               d={geometryPath(f.geometry)}
-              fill={/Polygon/.test(f.geometry?.type) ? "#80bccc55" : "none"}
+              fill={isFilled(f.geometry) ? "#80bccc55" : "none"}
               stroke="#d1b374"
               strokeWidth={1.5 / zoom}
             >

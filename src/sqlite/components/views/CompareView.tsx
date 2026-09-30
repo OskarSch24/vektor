@@ -44,7 +44,8 @@ export function CompareView({ data }: { data: Dataset }) {
         !format ||
         format === "sqlite" ||
         format === "connection" ||
-        format === "duckdb"
+        format === "duckdb" ||
+        format === "sql"
       )
         throw new Error(
           "Für den Vergleich CSV, JSON, YAML, XML, TOML, Excel, Parquet oder Arrow wählen.",

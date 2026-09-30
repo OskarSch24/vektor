@@ -7,7 +7,7 @@ const COLLAPSED_STORAGE_KEY = 'sqlite-studio.projects-collapsed';
 const FORMATS_STORAGE_KEY = 'sqlite-studio.project-formats';
 
 /** All supported source formats are visible when no preference was saved. */
-const DEFAULT_FORMATS: FileFormat[] = ['sqlite', 'csv', 'xlsx', 'json', 'document', 'parquet', 'arrow', 'duckdb', 'connection'];
+const DEFAULT_FORMATS: FileFormat[] = ['sqlite', 'csv', 'xlsx', 'json', 'document', 'parquet', 'arrow', 'duckdb', 'connection', 'sql'];
 
 function readEnabledFormats(): Set<FileFormat> {
   try {

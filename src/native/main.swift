@@ -19,6 +19,7 @@ enum AppConfig {
         "yaml", "yml", "xml", "toml", "geojson", "parquet", "arrow", "feather", "ipc", "duckdb", "dbconnection",
         "md", "markdown", "mdown", "mkd", "mkdn",
         "xls", "ods", "numbers", "gz", "graphml", "gexf", "dot", "gv",
+        "sql", "ipynb", "kml", "gpx",
     ]
 
     /// `.graph` has no registered UTI, so one is derived from the extension and
@@ -815,18 +816,21 @@ enum ProjectScanner {
         if ext == "gz" {
             let inner = url.deletingPathExtension()
             guard ["csv", "tsv", "json", "jsonl", "ndjson", "sqlite", "sqlite3", "db", "db3",
-                   "yaml", "yml", "xml", "toml", "geojson"].contains(inner.pathExtension.lowercased()),
+                   "yaml", "yml", "xml", "toml", "geojson", "kml", "gpx", "sql"].contains(inner.pathExtension.lowercased()),
                   fileHead(url, count: 2) == Data([0x1f, 0x8b]) else { return nil }
             switch inner.pathExtension.lowercased() {
             case "csv", "tsv": return "csv"
             case "json", "jsonl", "ndjson": return "json-table"
-            case "yaml", "yml", "xml", "toml", "geojson": return "document"
+            case "yaml", "yml", "xml", "toml", "geojson", "kml", "gpx": return "document"
+            case "sql": return "sql"
             default: return "sqlite"
             }
         }
         if ["xls", "ods", "numbers"].contains(ext) { return "excel" }
         if ext == "dbconnection" || name.hasSuffix(".dbconnection.json") { return "connection" }
-        if ["yaml", "yml", "xml", "toml", "geojson"].contains(ext) { return "document" }
+        if ["yaml", "yml", "xml", "toml", "geojson", "kml", "gpx"].contains(ext) { return "document" }
+        if ext == "ipynb" { return "notebook" }
+        if ext == "sql" { return "sql" }
         if ["md", "markdown", "mdown", "mkd", "mkdn"].contains(ext) { return "markdown" }
         if ["arrow", "feather", "ipc"].contains(ext) { return "arrow" }
         if ext == "parquet" { return "parquet" }
