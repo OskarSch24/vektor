@@ -17,7 +17,7 @@ export const FORMATS: FormatSpec[] = [
   { format: 'sqlite', label: 'SQLite', extensions: ['sqlite', 'sqlite3', 'sqlite2', 'db', 'db3'] },
   { format: 'csv', label: 'CSV', extensions: ['csv', 'tsv'] },
   { format: 'json', label: 'JSON', extensions: ['json', 'jsonl', 'ndjson'] },
-  { format: 'xlsx', label: 'Excel', extensions: ['xlsx', 'xlsm'] },
+  { format: 'xlsx', label: 'Tabellenkalkulation', extensions: ['xlsx', 'xlsm', 'xls', 'ods', 'numbers'] },
   { format: 'document', label: 'Dokument', extensions: ['yaml', 'yml', 'toml', 'xml', 'geojson'] },
   { format: 'parquet', label: 'Parquet', extensions: ['parquet'] },
   { format: 'arrow', label: 'Arrow', extensions: ['arrow', 'feather', 'ipc'] },
@@ -28,7 +28,7 @@ export const FORMATS: FormatSpec[] = [
 /** Every extension the app offers in file dialogs and looks for in projects. */
 export const SUPPORTED_EXTENSIONS = FORMATS.flatMap((spec) => spec.extensions);
 
-export const FILE_INPUT_ACCEPT = SUPPORTED_EXTENSIONS.map((ext) => `.${ext}`).join(',');
+export const FILE_INPUT_ACCEPT = [...SUPPORTED_EXTENSIONS, 'gz'].map((ext) => `.${ext}`).join(',');
 
 export function extensionOf(filename: string): string {
   const match = /\.([^.\\/]+)$/.exec(filename);
@@ -37,6 +37,8 @@ export function extensionOf(filename: string): string {
 
 export function detectFormat(filename: string): FileFormat | null {
   if (filename.toLowerCase().endsWith('.dbconnection.json')) return 'connection';
+  // `daten.csv.gz` is read as the file it contains.
+  if (/\.gz$/i.test(filename)) return detectFormat(filename.slice(0, -3));
   const extension = extensionOf(filename);
   return FORMATS.find((spec) => spec.extensions.includes(extension))?.format ?? null;
 }
@@ -61,7 +63,9 @@ export async function importTables(
     case 'json':
       return importJson(bytes, filename);
     case 'xlsx':
-      return importXlsx(bytes, filename);
+      return /\.xls[xm]$/i.test(filename)
+        ? importXlsx(bytes, filename)
+        : (await import('./spreadsheet')).importSpreadsheet(bytes, filename);
     case 'document':
       return documentTables(parseSourceDocument(bytes, filename)!, filename);
     case 'parquet':

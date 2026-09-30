@@ -14,6 +14,7 @@ import {
 } from './services/nativeHost';
 import { importCoordinationFolder } from './services/coordination/import';
 import { validateGraphDocument } from './services/graphDocument';
+import { isGraphExchangeFile, parseGraphExchange } from './services/graphFormats';
 import { isPhaseXEnvelope, isPhaseXFileName } from './services/phaseX/adapter';
 import { importPhaseXDocument } from './services/phaseX/import';
 import { DEFAULT_INGEST_PORT, addUsage } from './services/settings';
@@ -139,6 +140,12 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
   const mutationRevision = useRef(0);
   const dirtyVersionRef = useRef<number | null>(null);
   const pathlessSessions = useRef(new Map<string, PathlessGraphSnapshot>());
+  /**
+   * GraphML/GEXF/DOT files are shown but never autosaved over. Their unsaved
+   * edits wait here, by path, while another graph occupies the engine.
+   */
+  const importedPathRef = useRef<string | null>(null);
+  const importedSessions = useRef(new Map<string, { document: GraphDocument; dirtyVersion: number }>());
   const activePathlessSessionKey = useRef<string | null>(pathlessSessionKey);
   const activePathlessOwnerId = useRef<string | null>(pathlessSessionKey ? editorTabId ?? null : null);
   // The API adopts a graph before React receives the matching root-tab props.
@@ -198,6 +205,13 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
   }, []);
 
   const flushDirtyGraph = useCallback(() => {
+    const importedPath = importedPathRef.current;
+    if (importedPath && dirtyVersionRef.current !== null && graphEngine.isLoaded()) {
+      importedSessions.current.set(importedPath, {
+        document: cloneGraphDocument(graphEngine.toDocument()),
+        dirtyVersion: dirtyVersionRef.current,
+      });
+    }
     const path = graphPathRef.current;
     const revision = dirtyVersionRef.current;
     if (!path || revision === null || !graphEngine.isLoaded() || !isNativeHost()) return;
@@ -262,6 +276,7 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
     documentGeneration.current += 1;
     graphPathRef.current = null;
     dirtyVersionRef.current = snapshot.dirtyVersion;
+    importedPathRef.current = null;
     graphEngine.load(cloneGraphDocument(snapshot.document), snapshot.document.metadata.name);
     setGraphPath(null);
     setActiveFilePath(snapshot.activeFilePath);
@@ -292,6 +307,9 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
     if (!disposeEvent) return;
     if (disposeEvent.releaseSession) {
       pathlessSessions.current.delete(disposeEvent.sessionKey);
+      // File-backed sessions are keyed `kind\0path\0`; a discarded import goes.
+      const closedPath = disposeEvent.sessionKey.split('\u0000')[1];
+      if (closedPath) importedSessions.current.delete(closedPath);
     }
     if (!disposeEvent.unloadActive) return;
 
@@ -303,6 +321,7 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
     directSourceAdoption.current = null;
     activePathlessSessionKey.current = null;
     activePathlessOwnerId.current = null;
+    importedPathRef.current = null;
     graphPathRef.current = null;
     dirtyVersionRef.current = null;
     graphEngine.close();
@@ -504,6 +523,7 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
     (document: GraphDocument, name: string, path: string | null, sourceName = name) => {
       flushDirtyGraph();
       documentGeneration.current += 1;
+      importedPathRef.current = null;
       graphPathRef.current = path;
       dirtyVersionRef.current = null;
       graphEngine.load(document, name);
@@ -526,6 +546,7 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
     (imported: AdaptedPhaseXRun) => {
       flushDirtyGraph();
       documentGeneration.current += 1;
+      importedPathRef.current = null;
       graphPathRef.current = null;
       dirtyVersionRef.current = null;
       graphEngine.load(imported.graph, imported.graph.metadata.name);
@@ -551,6 +572,32 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
     [flushDirtyGraph, onSourceChanged, refreshGraph]
   );
 
+  /** Shows an exchange-format file; the original is never written back. */
+  const adoptImportedGraph = useCallback(
+    (document: GraphDocument, filename: string, path: string | null) => {
+      flushDirtyGraph();
+      documentGeneration.current += 1;
+      const pending = path ? importedSessions.current.get(path) : undefined;
+      if (path) importedSessions.current.delete(path);
+      importedPathRef.current = path;
+      graphPathRef.current = null;
+      dirtyVersionRef.current = pending?.dirtyVersion ?? null;
+      graphEngine.load(pending?.document ?? document, filename.replace(/\.[^.]+$/, ''));
+      setGraphPath(null);
+      setActiveFilePath(path);
+      setPhaseXRun(null);
+      setHasGraph(true);
+      setSelectedId(null);
+      setHighlighted(null);
+      setHiddenLabels(new Set());
+      setActiveTab((current) => (current === 'hierarchy' ? 'graph' : current));
+      setDirtyVersion(pending?.dirtyVersion ?? null);
+      onSourceChanged?.({ name: filename, path, fileType: 'graph' });
+      refreshGraph();
+    },
+    [flushDirtyGraph, onSourceChanged, refreshGraph]
+  );
+
   const parseAndAdopt = useCallback(
     async (
       contents: string,
@@ -560,6 +607,12 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
     ): Promise<boolean> => {
       const intent = expectedIntent ?? ++loadIntent.current;
       try {
+        if (isGraphExchangeFile(filename)) {
+          const document = parseGraphExchange(contents, filename);
+          if (intent !== loadIntent.current) return false;
+          adoptImportedGraph(document, filename, path);
+          return true;
+        }
         const parsed: unknown = JSON.parse(contents);
         if (isPhaseXEnvelope(parsed) || isPhaseXFileName(filename)) {
           const imported = await importPhaseXDocument(parsed, { filename, path });
@@ -580,7 +633,7 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
         return false;
       }
     },
-    [adoptDocument, adoptPhaseXRun, reportError]
+    [adoptDocument, adoptImportedGraph, adoptPhaseXRun, reportError]
   );
 
   const handleNewGraph = useCallback(() => {
@@ -588,6 +641,7 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
     loadIntent.current += 1;
     flushDirtyGraph();
     documentGeneration.current += 1;
+    importedPathRef.current = null;
     graphPathRef.current = null;
     dirtyVersionRef.current = null;
     graphEngine.create('Unbenannter Graph');
@@ -738,6 +792,9 @@ export const GraphStudio: React.FC<GraphStudioProps> = ({
           ? await enqueueGraphWrite({ path: graphPath, contents, generation, revision })
           : await files.saveAs(filename, contents);
         if (saved && generation === documentGeneration.current) {
+          // A saved import is now an ordinary `.graph`; the original stays as is.
+          if (importedPathRef.current) importedSessions.current.delete(importedPathRef.current);
+          importedPathRef.current = null;
           graphPathRef.current = saved.path;
           setGraphPath(saved.path);
           if (dirtyVersionRef.current === revision) {

@@ -35,6 +35,8 @@ Vektor is a local macOS app for relational, tabular, graph and snapshot data. Re
 | DuckDB, PostgreSQL, MySQL/MariaDB, MongoDB | Tables / collections; servers via connection files | read-only import into a working copy |
 | `.graph` | Graph, Cypher, ontology, statistics, import | file with autosave |
 | `.amqrun` / `.amqrun.json` | Hierarchy, graph, JSON, statistics | immutable original |
+| XLS, ODS, Numbers, gzip-packed files (`.csv.gz` …) | Same as the other table sources | in-memory working copy |
+| GraphML, GEXF, Graphviz DOT | Graph, Cypher, statistics | original untouched, saved as `.graph` |
 | Markdown (`.md`) | Read, split and edit view with live preview | file, saved with `⌘S` |
 | Redis RDB / AOF | Keys and projection / detection and diagnostics | protected temporary copy / never executed |
 

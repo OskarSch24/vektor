@@ -25,6 +25,7 @@ import type { ForeignKeyNavigationTarget } from './components/RelationalDataGrid
 import type { MergeFilesReport } from './components/MergeFilesModal';
 import type { ImportedTable } from './services/importers';
 import { parseSourceDocument } from './services/importers/documents';
+import { gunzip, isGzipName, stripGzipSuffix } from './services/importers/compression';
 
 const StandaloneTableStudioView = lazy(async () => ({
   default: (await import('./components/StandaloneTableStudioView')).StandaloneTableStudioView,
@@ -35,15 +36,20 @@ const StandaloneTableStudioView = lazy(async () => ({
  * everything else is imported into an in-memory database first.
  */
 async function openAsDatabase(
-  buffer: ArrayBuffer,
+  buffer: ArrayBuffer | Uint8Array,
   filename: string,
   shouldAdopt: () => boolean = () => true
 ): Promise<DatabaseMetadata | null> {
+  if (isGzipName(filename)) {
+    const unpacked = await gunzip(new Uint8Array(buffer), filename);
+    if (!shouldAdopt()) return null;
+    return openAsDatabase(unpacked, stripGzipSuffix(filename), shouldAdopt);
+  }
   const format = detectFormat(filename);
   if (format === null || format === 'sqlite') {
     return dbEngine.loadDatabase(buffer, filename, shouldAdopt);
   }
-  const bytes = new Uint8Array(buffer);
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   const document = format === 'json' || format === 'document' ? parseSourceDocument(bytes, filename) : null;
   const tables = await importTables(bytes, filename, format);
   if (!shouldAdopt()) return null;

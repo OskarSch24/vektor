@@ -12,6 +12,9 @@ Neue Dateitypen öffnen sich im vorhandenen Tab: im Explorer anklicken oder übe
 | Arrow IPC, Feather V2 (`.arrow`, `.ipc`, `.feather`) | Tabelle |
 | DuckDB (`.duckdb`) | Tabellen als lesende lokale Arbeitskopie |
 | `.dbconnection.json` / `.dbconnection` | Tabellen oder Sammlungen einer Serverdatenbank als lesende lokale Arbeitskopie |
+| Excel 97–2003 (`.xls`), OpenDocument (`.ods`), Numbers (`.numbers`) | Tabelle je Blatt; Formeln zeigen ihren gespeicherten Wert, Makros laufen nie |
+| Mit gzip gepackt (`.csv.gz`, `.jsonl.gz`, `.json.gz`, `.sqlite.gz` …) | Wie die enthaltene Datei; wird beim Öffnen entpackt (höchstens 1 GB) |
+| GraphML, GEXF, Graphviz (`.graphml`, `.gexf`, `.dot`, `.gv`) | Graph; das Original bleibt unverändert, `⌘S` sichert als neue `.graph`-Datei |
 | Markdown (`.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`) | Eigener Markdown-Tab: Lesen, Geteilt oder Bearbeiten; `⌘S` speichert in die Datei |
 
 ## Markdown

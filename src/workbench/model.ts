@@ -126,7 +126,8 @@ export function workspaceFor(file: Pick<ProjectFileNode, 'fileType' | 'name'>): 
       return 'markdown';
     default: {
       const lower = file.name.toLocaleLowerCase();
-      if (/\.(?:sqlite3?|sqlite2|db3?|csv|tsv|jsonl|ndjson|xlsx|xlsm)$/.test(lower)) return 'table';
+      if (/\.(?:sqlite3?|sqlite2|db3?|csv|tsv|jsonl|ndjson|xlsx|xlsm|xls|ods|numbers)$/.test(lower)) return 'table';
+      if (GRAPH_EXCHANGE_NAME.test(lower)) return 'graph';
       if (/\.(?:rdb|aof)$/.test(lower) || lower.endsWith('.aof.manifest')) return 'vault';
       if (MARKDOWN_NAME.test(lower)) return 'markdown';
       return 'graph';
@@ -137,8 +138,20 @@ export function workspaceFor(file: Pick<ProjectFileNode, 'fileType' | 'name'>): 
 /** Kept in step with `ProjectScanner.projectFileType` and Info.plist. */
 export const MARKDOWN_NAME = /\.(?:md|markdown|mdown|mkd|mkdn)$/;
 
+/** GraphML, GEXF and Graphviz open as a graph; the original is never rewritten. */
+export const GRAPH_EXCHANGE_NAME = /\.(?:graphml|gexf|dot|gv)$/;
+
+/** Compressed files a table import can unpack: `daten.csv.gz`, `export.jsonl.gz`. */
+const GZIP_TABLE_NAME = /\.(?:csv|tsv|json|jsonl|ndjson|sqlite3?|db3?|ya?ml|xml|toml|geojson)\.gz$/;
+
 export function fileTypeForName(name: string): ProjectFileNode['fileType'] {
   const lower = name.toLocaleLowerCase();
+  if (GZIP_TABLE_NAME.test(lower)) {
+    const inner = fileTypeForName(name.slice(0, -3));
+    // JSON inside gzip is always read as data: graph envelopes need the plain file.
+    return inner === 'graph' || inner === 'phase-x-run' ? 'json-table' : inner;
+  }
+  if (GRAPH_EXCHANGE_NAME.test(lower)) return 'graph';
   if (/\.dbconnection(?:\.json)?$/.test(lower)) return 'connection';
   if (MARKDOWN_NAME.test(lower)) return 'markdown';
   if (/\.(?:ya?ml|xml|toml|geojson)$/.test(lower)) return 'document';
@@ -151,7 +164,7 @@ export function fileTypeForName(name: string): ProjectFileNode['fileType'] {
   if (/\.(?:csv|tsv|jsonl|ndjson)$/.test(lower)) {
     return lower.endsWith('jsonl') || lower.endsWith('ndjson') ? 'json-table' : 'csv';
   }
-  if (/\.(?:xlsx|xlsm)$/.test(lower)) return 'excel';
+  if (/\.(?:xlsx|xlsm|xls|ods|numbers)$/.test(lower)) return 'excel';
   if (lower.endsWith('.rdb')) return 'redis-rdb';
   if (lower.endsWith('.aof') || lower.endsWith('.aof.manifest')) return 'redis-aof';
   return lower.endsWith('.json') ? 'json-table' : 'graph';

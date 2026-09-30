@@ -70,6 +70,10 @@
 				<string>tsv</string>
 				<string>xlsx</string>
 				<string>xlsm</string>
+				<string>xls</string>
+				<string>ods</string>
+				<string>numbers</string>
+				<string>gz</string>
 			</array>
 			<key>LSItemContentTypes</key>
 			<array>
@@ -77,6 +81,10 @@
 				<string>public.comma-separated-values-text</string>
 				<string>public.tab-separated-values-text</string>
 				<string>org.openxmlformats.spreadsheetml.sheet</string>
+				<string>com.microsoft.excel.xls</string>
+				<string>org.oasis-open.opendocument.spreadsheet</string>
+				<string>com.apple.iwork.numbers.sheetpro</string>
+				<string>org.gnu.gnu-zip-archive</string>
 			</array>
 		</dict>
 		<dict>
@@ -121,6 +129,10 @@
 				<string>ipc</string>
 				<string>duckdb</string>
 				<string>dbconnection</string>
+				<string>graphml</string>
+				<string>gexf</string>
+				<string>dot</string>
+				<string>gv</string>
 			</array>
 		</dict>
 		<dict>
