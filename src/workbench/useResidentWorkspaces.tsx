@@ -5,10 +5,13 @@ const loadGraphStudio = () => import('../GraphStudio');
 const loadTableStudio = () => import('../sqlite/App');
 const loadVaultStudio = () => import('../vault/App');
 
+const loadMarkdownStudio = () => import('../markdown/MarkdownStudio');
+
 const workspaceLoaders: Record<DataWorkspaceKind, () => Promise<unknown>> = {
   graph: loadGraphStudio,
   table: loadTableStudio,
   vault: loadVaultStudio,
+  markdown: loadMarkdownStudio,
 };
 
 const preloadOrder: DataWorkspaceKind[] = ['graph', 'table', 'vault'];
@@ -23,6 +26,12 @@ export const TableStudio = lazy(async () => ({
 
 export const VaultStudio = lazy(async () => ({
   default: (await loadVaultStudio()).VaultStudio,
+}));
+
+// Not resident: a Markdown note has no engine worth keeping warm. Its buffers
+// live in the module, so switching tabs keeps unsaved text anyway.
+export const MarkdownStudio = lazy(async () => ({
+  default: (await loadMarkdownStudio()).MarkdownStudio,
 }));
 
 /**

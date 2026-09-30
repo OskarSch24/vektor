@@ -16,7 +16,8 @@ export interface ProjectFileNode {
     | 'duckdb'
     | 'connection'
     | 'redis-rdb'
-    | 'redis-aof';
+    | 'redis-aof'
+    | 'markdown';
   /** The absolute path — stable across re-scans, so it doubles as the id. */
   id: string;
   name: string;

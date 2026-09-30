@@ -12,6 +12,22 @@ Neue Dateitypen öffnen sich im vorhandenen Tab: im Explorer anklicken oder übe
 | Arrow IPC, Feather V2 (`.arrow`, `.ipc`, `.feather`) | Tabelle |
 | DuckDB (`.duckdb`) | Tabellen als lesende lokale Arbeitskopie |
 | `.dbconnection.json` / `.dbconnection` | Tabellen oder Sammlungen einer Serverdatenbank als lesende lokale Arbeitskopie |
+| Markdown (`.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`) | Eigener Markdown-Tab: Lesen, Geteilt oder Bearbeiten; `⌘S` speichert in die Datei |
+
+## Markdown
+
+Vektor meldet sich bei macOS als Editor für Markdown an. Ein Doppelklick im Finder
+öffnet die Notiz als Tab, sofern keine andere App Standard ist; sonst im Finder über
+„Informationen → Öffnen mit → Vektor → Alle ändern…“ festlegen. Markdown-Dateien
+in Projektordnern erscheinen im Explorer und in `⌘P`.
+
+Die Vorschau zeigt GitHub-Markdown mit Tabellen und Aufgabenlisten, Frontmatter als
+aufklappbare „Eigenschaften“ und `[[Wikilinks]]`. Relative Links auf Notizen und
+Datendateien öffnen in Vektor (`⌘`-Klick im neuen Tab), Bilder neben der Notiz werden
+angezeigt, Web-Links öffnen im Browser. Eingebettetes HTML wird bereinigt; Skripte
+laufen nie. Ungesicherte Änderungen bleiben beim Tabwechsel erhalten und werden beim
+Schließen abgefragt. Ohne ungesicherte Änderungen lädt Vektor eine extern geänderte
+Datei beim Zurückkehren neu.
 
 Im Tab „Daten“ bietet **Ansicht** zusätzlich Datensatz, Tabellenbeziehungen,
 Diagramm, Pivot, Zeitstrahl, Kalender, Kanban, Karte, Galerie, Vergleich,

@@ -146,6 +146,7 @@ html[data-window-fullscreen="true"] .native-titlebar-safe-area {
 .cursor-editor-tab-table.is-active::before { background: var(--cursor-cyan); }
 .cursor-editor-tab-graph.is-active::before { background: var(--cursor-purple); }
 .cursor-editor-tab-vault.is-active::before { background: var(--cursor-amber); }
+.cursor-editor-tab-markdown.is-active::before { background: var(--cursor-blue); }
 
 .cursor-editor-tab {
   box-shadow: inset 0 -1px rgba(0, 0, 0, 0.12);
@@ -178,6 +179,7 @@ html[data-window-fullscreen="true"] .native-titlebar-safe-area {
 .tab-icon-table { color: var(--cursor-cyan); }
 .tab-icon-graph { color: var(--cursor-purple); }
 .tab-icon-vault { color: var(--cursor-amber); }
+.tab-icon-markdown { color: var(--cursor-blue); }
 
 .source-dot {
   width: 6px;
@@ -190,6 +192,7 @@ html[data-window-fullscreen="true"] .native-titlebar-safe-area {
 .source-dot-table { background: var(--cursor-cyan); }
 .source-dot-graph { background: var(--cursor-purple); }
 .source-dot-vault { background: var(--cursor-amber); }
+.source-dot-markdown { background: var(--cursor-blue); }
 
 .data-room {
   position: relative;

@@ -189,6 +189,19 @@ export function useWorkbenchController() {
     else replaceActiveTab(tab);
   }, [activateEditorTab, createTabId, insertAfterActive, replaceActiveTab]);
 
+  /** Opens a file by absolute path, e.g. a relative link inside a Markdown note. */
+  const openPath = useCallback((path: string, disposition: OpenDisposition = 'current') => {
+    const name = path.split('/').pop() ?? path;
+    const fileType = fileTypeForName(name);
+    openSource({
+      kind: workspaceFor({ name, fileType }),
+      path,
+      name,
+      fileType,
+      requestVersion: ++requestSequence.current,
+    }, disposition);
+  }, [openSource]);
+
   const openFile = useCallback((file: ProjectFileNode, disposition: OpenDisposition = 'current') => {
     openSource({
       kind: workspaceFor(file),
@@ -320,6 +333,10 @@ export function useWorkbenchController() {
   );
   const setTableDirty = useCallback(
     (dirty: boolean) => setWorkspaceDirty('table', dirty),
+    [setWorkspaceDirty]
+  );
+  const setMarkdownDirty = useCallback(
+    (dirty: boolean) => setWorkspaceDirty('markdown', dirty),
     [setWorkspaceDirty]
   );
 
@@ -520,11 +537,13 @@ export function useWorkbenchController() {
     graphDisposeEvent: workspaceDisposals.graph,
     tableDisposeEvent: workspaceDisposals.table,
     vaultDisposeEvent: workspaceDisposals.vault,
+    markdownDisposeEvent: workspaceDisposals.markdown,
     selectEditorTab,
     closeEditorTab,
     closeActiveTab,
     addBlankTab,
     openFile,
+    openPath,
     openHome,
     requestOpenFile,
     beginGraphIntent,
@@ -535,6 +554,7 @@ export function useWorkbenchController() {
     syncVaultSource,
     setGraphDirty,
     setTableDirty,
+    setMarkdownDirty,
     revealGraphOwner,
     revealTableOwner,
     revealGraphForExternalIngest,

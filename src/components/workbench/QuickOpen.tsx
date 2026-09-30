@@ -3,6 +3,7 @@ import {
   Database,
   FileJson2,
   FileSpreadsheet,
+  FileText,
   FolderSearch2,
   HardDrive,
   Network,
@@ -73,6 +74,7 @@ const FILE_TYPE_LABELS: Partial<Record<NonNullable<ProjectFileNode['fileType']>,
   connection: 'VERBINDUNG',
   'redis-rdb': 'RDB',
   'redis-aof': 'AOF',
+  markdown: 'MARKDOWN',
 };
 
 /** Exposed for focused tests and future command-palette reuse. */
@@ -550,6 +552,8 @@ function iconForFile(file: ProjectFileNode) {
     case 'redis-rdb':
     case 'redis-aof':
       return HardDrive;
+    case 'markdown':
+      return FileText;
     default:
       return Braces;
   }
@@ -563,6 +567,8 @@ function iconColor(file: ProjectFileNode): string {
     case 'redis-rdb':
     case 'redis-aof':
       return 'text-[var(--cursor-amber)]';
+    case 'markdown':
+      return 'text-[var(--cursor-blue)]';
     default:
       return 'text-[var(--cursor-cyan)]';
   }

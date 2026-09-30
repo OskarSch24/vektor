@@ -7,11 +7,13 @@ import {
 } from '../../workbench/model';
 import {
   GraphStudio,
+  MarkdownStudio,
   TableStudio,
   VaultStudio,
   useResidentWorkspaces,
 } from '../../workbench/useResidentWorkspaces';
 import type { WorkbenchController } from '../../workbench/useWorkbenchController';
+import { releaseMarkdownBuffer } from '../../markdown/buffers';
 import { DataRoom } from './DataRoom';
 import { WorkspaceBoundary } from './WorkspaceBoundary';
 import { WorkspaceLoading } from './WorkspaceLoading';
@@ -50,6 +52,11 @@ export function WorkspaceHost({
     didAnnounceReady.current = true;
     announceReady();
   }, [allAdaptersReady]);
+
+  useEffect(() => {
+    const event = workbench.markdownDisposeEvent;
+    if (event?.releaseSession) releaseMarkdownBuffer(event.sessionKey);
+  }, [workbench.markdownDisposeEvent]);
 
   const activeTableName = workbench.tabs.find(
     (tab) => tab.id === workbench.tableOwnerTabId
@@ -160,6 +167,20 @@ export function WorkspaceHost({
             </Suspense>
           </WorkspaceBoundary>
         </div>
+      )}
+
+      {workbench.source.kind === 'markdown' && (
+        <WorkspaceBoundary label="Markdown">
+          <Suspense fallback={<WorkspaceLoading label="Markdown wird geladen" />}>
+            <MarkdownStudio
+              source={workbench.source}
+              sessionKey={sourceIdentity(workbench.source)}
+              onDirtyChange={workbench.setMarkdownDirty}
+              onOpenPath={workbench.openPath}
+              onNotice={workbench.reportNotice}
+            />
+          </Suspense>
+        </WorkspaceBoundary>
       )}
 
       {mountVault && (

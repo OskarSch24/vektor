@@ -10,6 +10,7 @@ import {
   FolderPlus,
   FileJson2,
   FileSpreadsheet,
+  FileText,
   Braces,
   Database,
   HardDrive,
@@ -653,6 +654,7 @@ function iconForFile(file: ProjectFileNode) {
     case 'redis-rdb':
     case 'redis-aof': return HardDrive;
     case 'phase-x-run': return FileJson2;
+    case 'markdown': return FileText;
     default: return Network;
   }
 }
@@ -671,6 +673,7 @@ function colourForFile(file: ProjectFileNode): string {
     case 'redis-rdb':
     case 'redis-aof': return 'text-[#b5a078]';
     case 'phase-x-run': return 'text-[#91a68e]';
+    case 'markdown': return 'text-[#82acd3]';
     default: return 'text-[#9d91ad]';
   }
 }

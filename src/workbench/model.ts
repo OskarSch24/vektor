@@ -1,6 +1,6 @@
 import type { ProjectFileNode } from '../types/projects';
 
-export type WorkspaceKind = 'home' | 'graph' | 'table' | 'vault';
+export type WorkspaceKind = 'home' | 'graph' | 'table' | 'vault' | 'markdown';
 export type DataWorkspaceKind = Exclude<WorkspaceKind, 'home'>;
 
 export interface ActiveSource {
@@ -94,6 +94,13 @@ export function initialWorkspaceSources(): Record<DataWorkspaceKind, ActiveSourc
       name: 'Redis-Speicherstand',
       requestVersion: 0,
     },
+    markdown: {
+      kind: 'markdown',
+      path: null,
+      name: 'Markdown',
+      fileType: 'markdown',
+      requestVersion: 0,
+    },
   };
 }
 
@@ -115,18 +122,25 @@ export function workspaceFor(file: Pick<ProjectFileNode, 'fileType' | 'name'>): 
     case 'graph':
     case 'phase-x-run':
       return 'graph';
+    case 'markdown':
+      return 'markdown';
     default: {
       const lower = file.name.toLocaleLowerCase();
       if (/\.(?:sqlite3?|sqlite2|db3?|csv|tsv|jsonl|ndjson|xlsx|xlsm)$/.test(lower)) return 'table';
       if (/\.(?:rdb|aof)$/.test(lower) || lower.endsWith('.aof.manifest')) return 'vault';
+      if (MARKDOWN_NAME.test(lower)) return 'markdown';
       return 'graph';
     }
   }
 }
 
+/** Kept in step with `ProjectScanner.projectFileType` and Info.plist. */
+export const MARKDOWN_NAME = /\.(?:md|markdown|mdown|mkd|mkdn)$/;
+
 export function fileTypeForName(name: string): ProjectFileNode['fileType'] {
   const lower = name.toLocaleLowerCase();
   if (/\.dbconnection(?:\.json)?$/.test(lower)) return 'connection';
+  if (MARKDOWN_NAME.test(lower)) return 'markdown';
   if (/\.(?:ya?ml|xml|toml|geojson)$/.test(lower)) return 'document';
   if (/\.(?:arrow|feather|ipc)$/.test(lower)) return 'arrow';
   if (lower.endsWith('.parquet')) return 'parquet';
@@ -153,5 +167,6 @@ export function sourceLabel(source: ActiveSource): string {
   if (source.kind === 'graph') return 'Graph';
   if (source.kind === 'table') return 'Tabelle';
   if (source.kind === 'vault') return 'Redis';
+  if (source.kind === 'markdown') return 'Markdown';
   return 'Start';
 }

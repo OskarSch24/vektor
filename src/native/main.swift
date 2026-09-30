@@ -17,6 +17,7 @@ enum AppConfig {
         "xlsx", "xlsm", "sqlite", "sqlite2", "sqlite3", "db", "db3",
         "rdb", "aof",
         "yaml", "yml", "xml", "toml", "geojson", "parquet", "arrow", "feather", "ipc", "duckdb", "dbconnection",
+        "md", "markdown", "mdown", "mkd", "mkdn",
     ]
 
     /// `.graph` has no registered UTI, so one is derived from the extension and
@@ -754,6 +755,10 @@ final class AssetSchemeHandler: NSObject, WKURLSchemeHandler {
         case "svg": return "image/svg+xml"
         case "png": return "image/png"
         case "jpg", "jpeg": return "image/jpeg"
+        case "gif": return "image/gif"
+        case "webp": return "image/webp"
+        case "avif": return "image/avif"
+        case "md", "markdown", "mdown", "mkd", "mkdn": return "text/markdown; charset=utf-8"
         case "ico": return "image/x-icon"
         case "woff2": return "font/woff2"
         case "wasm": return "application/wasm"
@@ -806,6 +811,7 @@ enum ProjectScanner {
         if ext == "graph" { return "graph" }
         if ext == "dbconnection" || name.hasSuffix(".dbconnection.json") { return "connection" }
         if ["yaml", "yml", "xml", "toml", "geojson"].contains(ext) { return "document" }
+        if ["md", "markdown", "mdown", "mkd", "mkdn"].contains(ext) { return "markdown" }
         if ["arrow", "feather", "ipc"].contains(ext) { return "arrow" }
         if ext == "parquet" { return "parquet" }
         if ext == "duckdb" { return "duckdb" }
@@ -2083,7 +2089,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKSc
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
         panel.allowedContentTypes = AppConfig.openContentTypes
-        panel.message = "Datenbank- oder Datendatei auswählen"
+        panel.message = "Datenbank-, Daten- oder Markdown-Datei auswählen"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         deliver(fileAt: url)
     }
@@ -2505,7 +2511,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKSc
             panel.canChooseDirectories = false
             panel.allowsMultipleSelection = false
             panel.allowedContentTypes = AppConfig.openContentTypes
-            panel.message = "Datenbank- oder Datendatei auswählen"
+            panel.message = "Datenbank-, Daten- oder Markdown-Datei auswählen"
             result = panel.runModal() == .OK ? panel.url : nil
         }
         return result

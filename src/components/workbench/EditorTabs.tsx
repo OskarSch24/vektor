@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { HardDrive, House, Network, Plus, Rows3, X } from 'lucide-react';
+import { FileText, HardDrive, House, Network, Plus, Rows3, X } from 'lucide-react';
 import type { EditorTab } from '../../workbench/model';
 
 interface EditorTabsProps {
@@ -21,7 +21,9 @@ export const EditorTabs: FC<EditorTabsProps> = ({ tabs, activeId, onSelect, onCl
             ? Rows3
             : tab.source.kind === 'graph'
               ? Network
-              : HardDrive;
+              : tab.source.kind === 'markdown'
+                ? FileText
+                : HardDrive;
         const label = tab.tableName ?? tab.source.name;
         const isActive = activeId === tab.id;
         return (
